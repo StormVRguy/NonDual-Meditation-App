@@ -170,7 +170,8 @@ serve(async (req) => {
       token,
       user: {
         id: user.id,
-        email: user.email
+        email: user.email,
+        personal_code: user.personal_code
       }
     }
     

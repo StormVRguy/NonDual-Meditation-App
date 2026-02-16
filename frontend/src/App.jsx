@@ -1,6 +1,8 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
+import QuestionnaireComplete from './pages/QuestionnaireComplete'
 import { isAuthenticated } from './utils/auth'
 import './App.css'
 
@@ -9,23 +11,15 @@ function App() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Check authentication status on mount
     const checkAuth = () => {
-      const authStatus = isAuthenticated()
-      setAuthenticated(authStatus)
+      setAuthenticated(isAuthenticated())
       setLoading(false)
     }
-
     checkAuth()
   }, [])
 
-  const handleLoginSuccess = () => {
-    setAuthenticated(true)
-  }
-
-  const handleLogout = () => {
-    setAuthenticated(false)
-  }
+  const handleLoginSuccess = () => setAuthenticated(true)
+  const handleLogout = () => setAuthenticated(false)
 
   if (loading) {
     return (
@@ -37,13 +31,24 @@ function App() {
   }
 
   return (
-    <div className="App">
-      {authenticated ? (
-        <Dashboard onLogout={handleLogout} />
-      ) : (
-        <Login onLoginSuccess={handleLoginSuccess} />
-      )}
-    </div>
+    <BrowserRouter>
+      <div className="App">
+        <Routes>
+          <Route path="/questionnaire-complete" element={<QuestionnaireComplete />} />
+          <Route
+            path="/"
+            element={
+              authenticated ? (
+                <Dashboard onLogout={handleLogout} />
+              ) : (
+                <Login onLoginSuccess={handleLoginSuccess} />
+              )
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </div>
+    </BrowserRouter>
   )
 }
 

@@ -45,10 +45,27 @@ function Dashboard({ onLogout }) {
 
   const handleQuestionnaireClick = async () => {
     if (!meditationMostlyPlayed) return
-    const qualtricsUrl = import.meta.env.VITE_QUALTRICS_SURVEY_URL
+    let qualtricsUrl = import.meta.env.VITE_QUALTRICS_SURVEY_URL
     if (!qualtricsUrl) {
       alert('Questionnaire URL not configured')
       return
+    }
+    // Append Q_PopulateResponse to pre-fill the Codice question (see PHASE4_QUALTRICS.md)
+    // Qualtrics requires the Question ID (e.g. QID1, QID2), NOT the export code "Codice".
+    const personalCode = user?.personal_code
+    const codiceQid = import.meta.env.VITE_QUALTRICS_CODICE_QID
+    if (personalCode && codiceQid) {
+      const [base, hash] = qualtricsUrl.split('#')
+      const separator = base.includes('?') ? '&' : '?'
+      const populateJson = JSON.stringify({ [codiceQid]: personalCode })
+      const withQuery = `${base}${separator}Q_PopulateResponse=${encodeURIComponent(populateJson)}`
+      qualtricsUrl = hash != null ? `${withQuery}#${hash}` : withQuery
+      if (import.meta.env.DEV) {
+        console.log('[Questionnaire] Pre-fill URL param added. QID:', codiceQid, '| Full URL (check in new tab):', qualtricsUrl)
+      }
+    } else if (import.meta.env.DEV) {
+      if (!personalCode) console.warn('[Questionnaire] No personal_code on user – re-login may be needed. Not adding Q_PopulateResponse.')
+      if (!codiceQid) console.warn('[Questionnaire] VITE_QUALTRICS_CODICE_QID not set. Set it to the question’s QID (e.g. QID5), not the export code "Codice".')
     }
     try {
       const token = getToken()
@@ -71,7 +88,7 @@ function Dashboard({ onLogout }) {
       <div className="dashboard-header">
         <h1>Meditation Training Dashboard</h1>
         <div className="user-info">
-          <span>Welcome, {user?.email}</span>
+          <span>Codice: {user?.personal_code ?? '—'}</span>
           <button onClick={handleLogout} className="logout-button">
             Logout
           </button>

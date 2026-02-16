@@ -23,7 +23,11 @@ function Login({ onLoginSuccess }) {
       })
 
       if (response.token && response.user) {
-        setAuth(response.token, response.user)
+        const user = {
+          ...response.user,
+          personal_code: response.user.personal_code ?? personalCode.trim()
+        }
+        setAuth(response.token, user)
         onLoginSuccess()
       } else {
         setError('Invalid response from server')
