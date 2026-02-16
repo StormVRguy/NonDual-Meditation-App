@@ -1,5 +1,5 @@
-// Edge Function: logs-questionnaire-start
-// Logs when a user starts the questionnaire (upserts daily_logs with questionnaire_started_at)
+// Edge Function: logs-meditation-finished
+// Sets meditation_finished = true when user has played 90% of the meditation (same condition as questionnaire unlock)
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -87,7 +87,7 @@ serve(async (req) => {
       .upsert({
         user_id: userId,
         date: today,
-        questionnaire_started_at: new Date().toISOString(),
+        meditation_finished: true,
         updated_at: new Date().toISOString(),
       }, {
         onConflict: 'user_id,date',
@@ -98,7 +98,7 @@ serve(async (req) => {
     if (error) {
       console.error('Database upsert error:', error)
       return new Response(
-        JSON.stringify({ error: error.message || 'Failed to log questionnaire start' }),
+        JSON.stringify({ error: error.message || 'Failed to log meditation finished' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       )
     }
@@ -108,10 +108,10 @@ serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
   } catch (error) {
-    console.error('Log questionnaire start error:', error)
+    console.error('Log meditation finished error:', error)
     const errorMessage = error instanceof Error ? error.message : String(error)
     return new Response(
-      JSON.stringify({ error: errorMessage || 'Failed to log questionnaire start' }),
+      JSON.stringify({ error: errorMessage || 'Failed to log meditation finished' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     )
   }

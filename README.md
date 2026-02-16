@@ -86,9 +86,22 @@ A web-based meditation training application with simplified email+code authentic
    - Enter test user credentials
    - Verify successful login and redirect to dashboard
 
+### Phase 3: Dashboard and Meditation Player ✅
+
+1. **Deploy Edge Functions**:
+   - Follow the detailed instructions in [PHASE3_DEPLOYMENT.md](./PHASE3_DEPLOYMENT.md)
+   - Deploy `meditation-today` and `logs-meditation-start` functions
+
+2. **Upload meditation files**:
+   - Upload audio files to Supabase Storage
+   - Add records to `meditation_files` table
+
+3. **Test the dashboard**:
+   - Login and verify the meditation player appears
+   - Test audio playback and logging
+
 ### Next Phases
 
-- **Phase 3**: Dashboard and meditation player
 - **Phase 4**: Qualtrics integration
 - **Phase 5**: Email reminder system
 - **Phase 6**: Admin and content management

@@ -78,3 +78,16 @@ export async function callEdgeFunction(functionName, options = {}) {
     throw new Error(err?.message || 'Failed to call Edge Function')
   }
 }
+
+/**
+ * Call an Edge Function that requires the current user (logging endpoints).
+ * Passes the user's JWT in the request body as user_token so Supabase still
+ * accepts the request (anon key in Authorization) and the function can read user_id.
+ */
+export async function callEdgeFunctionWithUser(functionName, userToken, options = {}) {
+  const body = {
+    ...(typeof options.body === 'object' && options.body !== null ? options.body : {}),
+    user_token: userToken,
+  }
+  return callEdgeFunction(functionName, { ...options, body })
+}
