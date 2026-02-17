@@ -91,6 +91,7 @@
 }
 
 .meditation-section,
+.lecture-section,
 .questionnaire-section {
   background: white;
   border-radius: 12px;
@@ -100,19 +101,22 @@
 }
 
 .meditation-section h2,
+.lecture-section h2,
 .questionnaire-section h2 {
   margin: 0 0 24px 0;
   color: #333;
   font-size: 20px;
 }
 
-.no-meditation {
+.no-meditation,
+.no-lecture {
   text-align: center;
   padding: 40px 20px;
   color: #666;
 }
 
-.no-meditation .subtext {
+.no-meditation .subtext,
+.no-lecture .subtext {
   font-size: 14px;
   color: #999;
   margin-top: 8px;
@@ -187,6 +191,7 @@
   }
 
   .meditation-section,
+  .lecture-section,
   .questionnaire-section {
     padding: 24px;
   }

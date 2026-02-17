@@ -2,18 +2,24 @@ import { useState, useEffect } from 'react'
 import { getUser, clearAuth, getToken } from '../utils/auth'
 import { callEdgeFunction, callEdgeFunctionWithUser } from '../api/client'
 import AudioPlayer from '../components/AudioPlayer'
+import VideoPlayer from '../components/VideoPlayer'
 import './Dashboard.css'
 
 function Dashboard({ onLogout }) {
   const user = getUser()
   const [meditation, setMeditation] = useState(null)
+  const [lecture, setLecture] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [lectureLoading, setLectureLoading] = useState(true)
   const [error, setError] = useState('')
+  const [lectureError, setLectureError] = useState('')
   const [meditationPlayed, setMeditationPlayed] = useState(false)
   const [meditationMostlyPlayed, setMeditationMostlyPlayed] = useState(false)
+  const [lectureWatched, setLectureWatched] = useState(false)
 
   useEffect(() => {
     fetchTodayMeditation()
+    fetchTodayLecture()
   }, [])
 
   const fetchTodayMeditation = async () => {
@@ -41,6 +47,29 @@ function Dashboard({ onLogout }) {
 
   const handleMeditationMostlyPlayed = () => {
     setMeditationMostlyPlayed(true)
+  }
+
+  const fetchTodayLecture = async () => {
+    try {
+      setLectureLoading(true)
+      setLectureError('')
+      const response = await callEdgeFunction('lecture-today')
+      
+      if (response.lecture) {
+        setLecture(response.lecture)
+      } else {
+        setLecture(null)
+      }
+    } catch (err) {
+      console.error('Failed to fetch lecture:', err)
+      setLectureError(err.message || 'Failed to load lecture video')
+    } finally {
+      setLectureLoading(false)
+    }
+  }
+
+  const handleLectureWatched = () => {
+    setLectureWatched(true)
   }
 
   const handleQuestionnaireClick = async () => {
@@ -126,6 +155,38 @@ function Dashboard({ onLogout }) {
               ) : (
                 <div className="no-meditation">
                   <p>No meditation is available.</p>
+                  <p className="subtext">Please contact your administrator.</p>
+                </div>
+              )}
+            </div>
+
+            <div className="lecture-section">
+              <h2>Latest Video Lecture</h2>
+              {lectureLoading ? (
+                <div className="loading-state">
+                  <div className="spinner"></div>
+                  <p>Loading lecture video...</p>
+                </div>
+              ) : lectureError ? (
+                <div className="error-state">
+                  <p className="error-message">{lectureError}</p>
+                  <button onClick={fetchTodayLecture} className="retry-button">
+                    Retry
+                  </button>
+                </div>
+              ) : lecture ? (
+                <>
+                  <VideoPlayer 
+                    videoUrl={lecture.file_url} 
+                    onWatched={handleLectureWatched}
+                  />
+                  {lectureWatched && (
+                    <p className="success-message">✓ Lecture watched (50%+)</p>
+                  )}
+                </>
+              ) : (
+                <div className="no-lecture">
+                  <p>No lecture video is available.</p>
                   <p className="subtext">Please contact your administrator.</p>
                 </div>
               )}

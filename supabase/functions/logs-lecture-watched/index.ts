@@ -1,5 +1,5 @@
-// Edge Function: logs-questionnaire-start
-// Logs when a user starts the questionnaire (sets questionnaire_started = TRUE and questionnaire_started_at timestamp)
+// Edge Function: logs-lecture-watched
+// Logs when a user has watched at least 50% of the video lecture
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -9,23 +9,31 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Base64URL decode helper
 function base64UrlDecode(str: string): string {
   let base64 = str.replace(/-/g, '+').replace(/_/g, '/')
   const padding = base64.length % 4
-  if (padding) base64 += '='.repeat(4 - padding)
+  if (padding) {
+    base64 += '='.repeat(4 - padding)
+  }
   return atob(base64)
 }
 
+// Verify and decode JWT
 function decodeJWT(token: string): any {
   try {
     const parts = token.split('.')
-    if (parts.length !== 3) return null
-    return JSON.parse(base64UrlDecode(parts[1]))
-  } catch {
+    if (parts.length !== 3) {
+      return null
+    }
+    const payload = JSON.parse(base64UrlDecode(parts[1]))
+    return payload
+  } catch (e) {
     return null
   }
 }
 
+// Get today's date in the app timezone
 function getTodayDate(timezone: string = 'America/New_York'): string {
   const now = new Date()
   const formatter = new Intl.DateTimeFormat('en-US', {
@@ -34,10 +42,12 @@ function getTodayDate(timezone: string = 'America/New_York'): string {
     month: '2-digit',
     day: '2-digit',
   })
+  
   const parts = formatter.formatToParts(now)
   const year = parts.find(p => p.type === 'year')?.value
   const month = parts.find(p => p.type === 'month')?.value
   const day = parts.find(p => p.type === 'day')?.value
+  
   return `${year}-${month}-${day}`
 }
 
@@ -47,6 +57,7 @@ serve(async (req) => {
   }
 
   try {
+    // User JWT is in body
     let body: { user_token?: string }
     try {
       body = await req.json()
@@ -61,6 +72,7 @@ serve(async (req) => {
       )
     }
     const payload = decodeJWT(token)
+
     if (!payload || !payload.user_id) {
       return new Response(
         JSON.stringify({ error: 'Invalid token' }),
@@ -69,26 +81,31 @@ serve(async (req) => {
     }
 
     const userId = payload.user_id
+
+    // Get Supabase service role client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    
     if (!supabaseUrl || !supabaseServiceKey) {
       return new Response(
         JSON.stringify({ error: 'Server configuration error' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       )
     }
-
+    
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+    // Get today's date in app timezone
     const appTimezone = Deno.env.get('APP_TIMEZONE') || 'America/New_York'
     const today = getTodayDate(appTimezone)
 
+    // Upsert daily_logs entry with lecture_watched = true
     const { data, error } = await supabase
       .from('daily_logs')
       .upsert({
         user_id: userId,
         date: today,
-        questionnaire_started: true,
-        questionnaire_started_at: new Date().toISOString(),
+        lecture_watched: true,
         updated_at: new Date().toISOString(),
       }, {
         onConflict: 'user_id,date',
@@ -99,20 +116,23 @@ serve(async (req) => {
     if (error) {
       console.error('Database upsert error:', error)
       return new Response(
-        JSON.stringify({ error: error.message || 'Failed to log questionnaire start' }),
+        JSON.stringify({ error: error.message || 'Failed to log lecture watched' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       )
     }
 
     return new Response(
-      JSON.stringify({ success: true, log: data }),
+      JSON.stringify({ 
+        success: true,
+        log: data
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
   } catch (error) {
-    console.error('Log questionnaire start error:', error)
+    console.error('Log lecture watched error:', error)
     const errorMessage = error instanceof Error ? error.message : String(error)
     return new Response(
-      JSON.stringify({ error: errorMessage || 'Failed to log questionnaire start' }),
+      JSON.stringify({ error: errorMessage || 'Failed to log lecture watched' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     )
   }
