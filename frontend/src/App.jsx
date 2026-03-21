@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import QuestionnaireComplete from './pages/QuestionnaireComplete'
+import SiteFooter from './components/SiteFooter'
 import { isAuthenticated } from './utils/auth'
 import './App.css'
 
@@ -21,32 +22,35 @@ function App() {
   const handleLoginSuccess = () => setAuthenticated(true)
   const handleLogout = () => setAuthenticated(false)
 
-  if (loading) {
-    return (
-      <div className="app-loading">
-        <div className="loading-spinner"></div>
-        <p>Loading...</p>
-      </div>
-    )
-  }
-
   return (
     <BrowserRouter>
-      <div className="App">
-        <Routes>
-          <Route path="/questionnaire-complete" element={<QuestionnaireComplete />} />
-          <Route
-            path="/"
-            element={
-              authenticated ? (
-                <Dashboard onLogout={handleLogout} />
-              ) : (
-                <Login onLoginSuccess={handleLoginSuccess} />
-              )
-            }
-          />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+      <div className="App app-layout">
+        {loading ? (
+          <main className="app-main app-main--loading" aria-busy="true">
+            <div className="app-loading">
+              <div className="loading-spinner"></div>
+              <p>Loading...</p>
+            </div>
+          </main>
+        ) : (
+          <main className="app-main">
+            <Routes>
+              <Route path="/questionnaire-complete" element={<QuestionnaireComplete />} />
+              <Route
+                path="/"
+                element={
+                  authenticated ? (
+                    <Dashboard onLogout={handleLogout} />
+                  ) : (
+                    <Login onLoginSuccess={handleLoginSuccess} />
+                  )
+                }
+              />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </main>
+        )}
+        <SiteFooter />
       </div>
     </BrowserRouter>
   )

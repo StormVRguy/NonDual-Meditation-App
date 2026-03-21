@@ -15,6 +15,24 @@ body {
   min-height: 100vh;
 }
 
+/* Stack main content + footer; footer stays at bottom on short pages */
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-main {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.app-main--loading {
+  justify-content: center;
+}
+
 .app-loading {
   min-height: 100vh;
   display: flex;

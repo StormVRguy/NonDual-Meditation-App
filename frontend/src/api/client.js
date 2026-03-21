@@ -9,6 +9,51 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
+/**
+ * Edge Functions: non-2xx responses set error.message to a generic string.
+ * The real message is usually JSON `{ error: "..." }` on the Response body in error.context.
+ */
+async function messageFromFunctionsInvokeError(error) {
+  const fallback = error?.message || 'An error occurred'
+  const ctx = error?.context
+  if (!ctx) return fallback
+
+  // Supabase functions-js: error.context is the fetch Response (body not read yet)
+  const isFetchResponse =
+    (typeof Response !== 'undefined' && ctx instanceof Response) ||
+    (typeof ctx?.json === 'function' && typeof ctx?.clone === 'function')
+
+  if (isFetchResponse) {
+    try {
+      const json = await ctx.clone().json()
+      if (json && typeof json.error === 'string') return json.error
+      if (json && typeof json.message === 'string') return json.message
+    } catch {
+      try {
+        const text = await ctx.clone().text()
+        if (text) {
+          const parsed = JSON.parse(text)
+          if (parsed?.error) return parsed.error
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+    return fallback
+  }
+
+  if (typeof ctx.response === 'string') {
+    try {
+      const parsed = JSON.parse(ctx.response)
+      if (parsed?.error) return parsed.error
+    } catch {
+      /* ignore */
+    }
+  }
+
+  return fallback
+}
+
 // Helper function to call Edge Functions
 // Uses Supabase client's invoke method which handles authentication correctly
 export async function callEdgeFunction(functionName, options = {}) {
@@ -38,35 +83,9 @@ export async function callEdgeFunction(functionName, options = {}) {
         context: error.context,
         status: error.context?.status,
         statusText: error.context?.statusText,
-        response: error.context?.response,
       })
-      
-      // Try to extract error message from various places
-      let errorMessage = 'An error occurred'
-      
-      // Check error.context.response (Supabase error structure)
-      if (error.context?.response) {
-        try {
-          const response = error.context.response
-          if (typeof response === 'string') {
-            const parsed = JSON.parse(response)
-            errorMessage = parsed?.error || parsed?.message || errorMessage
-          } else if (response.error || response.message) {
-            errorMessage = response.error || response.message
-          }
-        } catch (e) {
-          // If it's not JSON, use the string directly
-          if (typeof error.context.response === 'string') {
-            errorMessage = error.context.response
-          }
-        }
-      }
-      
-      // Fall back to error.message
-      if (error.message && errorMessage === 'An error occurred') {
-        errorMessage = error.message
-      }
-      
+
+      const errorMessage = await messageFromFunctionsInvokeError(error)
       throw new Error(errorMessage)
     }
 

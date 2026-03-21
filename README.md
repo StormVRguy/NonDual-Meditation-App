@@ -134,6 +134,12 @@ Deploy Edge Functions using Supabase CLI:
 supabase functions deploy <function-name>
 ```
 
+Include `daily-log-today` so the questionnaire stays unlocked after a meditation completed earlier the same day:
+
+```bash
+supabase functions deploy daily-log-today
+```
+
 ## Deploying the frontend on Netlify
 
 The repository root is **not** a static HTML site: it contains Supabase code, SQL, etc. The deployable app is **`frontend/`** (Vite + React). Netlify’s auto-detector often gets that wrong.
@@ -148,6 +154,15 @@ The repository root is **not** a static HTML site: it contains Supabase code, SQ
 4. If the build fails on `npm ci`, try changing the build command in Netlify UI to `npm install && npm run build`.
 
 If Netlify still **does not list the GitHub repo**, that is a GitHub integration issue (org permissions, third-party access, or private repo access for the Netlify GitHub App)—not the TypeScript/HTML detection.
+
+## Daily log: `logged_in_site`
+
+`daily_logs.logged_in_site` (boolean, default `FALSE`) is set to **`TRUE`** when the user **successfully logs in** that calendar day (same `APP_TIMEZONE` as other daily logs). Rows are per **`user_id` + `date`**; the user is identified by `personal_code` at login.
+
+- **Migration**: `supabase/migrations/010_add_logged_in_site.sql`
+- **Logic**: `auth-login` Edge Function upserts the row after issuing the JWT. Redeploy after pulling: `supabase functions deploy auth-login`
+
+**Note:** Opening the app with an existing session (no new login) does not set this flag until the next successful login that day.
 
 ## Environment Variables
 

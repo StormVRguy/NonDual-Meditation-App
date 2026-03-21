@@ -15,11 +15,27 @@ function Dashboard({ onLogout }) {
   const [lectureError, setLectureError] = useState('')
   const [meditationPlayed, setMeditationPlayed] = useState(false)
   const [meditationMostlyPlayed, setMeditationMostlyPlayed] = useState(false)
+  /** True if Supabase already has meditation_finished for today (any earlier session) */
+  const [serverMeditationFinished, setServerMeditationFinished] = useState(false)
   const [lectureWatched, setLectureWatched] = useState(false)
+
+  const questionnaireUnlocked = meditationMostlyPlayed || serverMeditationFinished
 
   useEffect(() => {
     fetchTodayMeditation()
     fetchTodayLecture()
+  }, [])
+
+  useEffect(() => {
+    const token = getToken()
+    if (!token) return
+    callEdgeFunctionWithUser('daily-log-today', token)
+      .then((res) => {
+        if (res?.meditation_finished === true) {
+          setServerMeditationFinished(true)
+        }
+      })
+      .catch((err) => console.error('Failed to fetch today daily log:', err))
   }, [])
 
   const fetchTodayMeditation = async () => {
@@ -73,7 +89,7 @@ function Dashboard({ onLogout }) {
   }
 
   const handleQuestionnaireClick = async () => {
-    if (!meditationMostlyPlayed) return
+    if (!questionnaireUnlocked) return
     let qualtricsUrl = import.meta.env.VITE_QUALTRICS_SURVEY_URL
     if (!qualtricsUrl) {
       alert('Questionnaire URL not configured')
@@ -197,18 +213,20 @@ function Dashboard({ onLogout }) {
               <button 
                 onClick={handleQuestionnaireClick}
                 className="questionnaire-button"
-                disabled={!meditationMostlyPlayed}
-                title={meditationMostlyPlayed ? 'Open questionnaire' : 'Listen to most of the meditation first'}
+                disabled={!questionnaireUnlocked}
+                title={questionnaireUnlocked ? 'Open questionnaire' : 'Listen to most of the meditation first'}
               >
                 Complete Questionnaire
               </button>
-              {!meditationMostlyPlayed ? (
+              {!questionnaireUnlocked ? (
                 <p className="section-description questionnaire-locked">
                   Listen to most of today's meditation (about 90%) to unlock the questionnaire.
                 </p>
               ) : (
                 <p className="section-description">
-                  Click the button above to open today's questionnaire in a new window.
+                  {serverMeditationFinished && !meditationMostlyPlayed
+                    ? "Today's meditation is already recorded. You can open the questionnaire."
+                    : 'Click the button above to open today\'s questionnaire in a new window.'}
                 </p>
               )}
             </div>

@@ -1,5 +1,6 @@
 // Edge Function: auth-login
-// Handles email + personal_code authentication and returns JWT
+// Handles personal_code authentication and returns JWT
+// On success, sets daily_logs.logged_in_site = TRUE for today (APP_TIMEZONE)
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -53,6 +54,21 @@ async function createJWT(payload: Record<string, any>, secret: string): Promise<
     .replace(/=/g, '')
 
   return `${encodedHeader}.${encodedPayload}.${encodedSignature}`
+}
+
+function getTodayDate(timezone: string = 'America/New_York'): string {
+  const now = new Date()
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  })
+  const parts = formatter.formatToParts(now)
+  const year = parts.find(p => p.type === 'year')?.value
+  const month = parts.find(p => p.type === 'month')?.value
+  const day = parts.find(p => p.type === 'day')?.value
+  return `${year}-${month}-${day}`
 }
 
 serve(async (req) => {
@@ -167,6 +183,26 @@ serve(async (req) => {
     } catch (jwtError) {
       console.error('JWT creation failed:', jwtError)
       throw jwtError
+    }
+
+    // Mark daily log: user logged into the site today (same calendar day as other logs)
+    const appTimezone = Deno.env.get('APP_TIMEZONE') || 'America/New_York'
+    const today = getTodayDate(appTimezone)
+    const { error: logError } = await supabase
+      .from('daily_logs')
+      .upsert(
+        {
+          user_id: user.id,
+          date: today,
+          logged_in_site: true,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'user_id,date' }
+      )
+
+    if (logError) {
+      console.error('Failed to upsert logged_in_site for daily_logs:', logError)
+      // Still return token — login succeeded; logging is secondary
     }
 
     const responseData = { 
