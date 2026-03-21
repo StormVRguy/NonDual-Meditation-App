@@ -1,0 +1,16 @@
+# Netlify: the real app lives in frontend/ (Vite + React), not the repo root.
+# Without this, Netlify scans the root (Supabase TS, SQL, etc.) and picks the wrong build.
+
+[build]
+  base = "frontend"
+  command = "npm ci && npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# React Router (SPA): send all routes to index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

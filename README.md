@@ -9,7 +9,7 @@ A web-based meditation training application with simplified email+code authentic
 - **Database**: Supabase PostgreSQL
 - **Storage**: Supabase Storage
 - **Email**: Resend API
-- **Hosting**: Vercel (frontend) or Supabase Storage
+- **Hosting**: Vercel, **Netlify**, or Supabase Storage (static)
 
 ## Project Structure
 
@@ -31,6 +31,7 @@ A web-based meditation training application with simplified email+code authentic
 │   │   └── send-reminders/
 │   └── migrations/       # Database migrations
 │       └── 001_initial.sql
+├── netlify.toml          # Netlify: build from frontend/ (Vite), SPA redirects
 ├── SUPABASE_SETUP.md     # Detailed Supabase setup instructions
 └── README.md             # This file
 ```
@@ -132,6 +133,21 @@ Deploy Edge Functions using Supabase CLI:
 ```bash
 supabase functions deploy <function-name>
 ```
+
+## Deploying the frontend on Netlify
+
+The repository root is **not** a static HTML site: it contains Supabase code, SQL, etc. The deployable app is **`frontend/`** (Vite + React). Netlify’s auto-detector often gets that wrong.
+
+1. **Use the included `netlify.toml`** (commit and push it). It sets:
+   - **Base directory**: `frontend`
+   - **Build command**: `npm ci && npm run build`
+   - **Publish directory**: `dist` (relative to `frontend`)
+   - **SPA fallback** for React Router (`/*` → `index.html`)
+2. In Netlify: **Add new site → Import from Git**, pick this repo. Netlify should read `netlify.toml` automatically.
+3. **Site settings → Environment variables**: add the same `VITE_*` values as in your local `.env` (they are not in the repo).
+4. If the build fails on `npm ci`, try changing the build command in Netlify UI to `npm install && npm run build`.
+
+If Netlify still **does not list the GitHub repo**, that is a GitHub integration issue (org permissions, third-party access, or private repo access for the Netlify GitHub App)—not the TypeScript/HTML detection.
 
 ## Environment Variables
 
