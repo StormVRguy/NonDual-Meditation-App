@@ -100,23 +100,23 @@ serve(async (req) => {
       )
     }
 
-    const { email, personal_code } = requestBody
+    const { personal_code } = requestBody
 
-    if (!email || !personal_code) {
+    if (!personal_code) {
       return new Response(
-        JSON.stringify({ error: 'Email and personal_code are required' }),
+        JSON.stringify({ error: 'Personal code is required' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       )
     }
 
-    // Query users table for matching email and personal_code
+    // Query users table for matching personal_code
     const { data: user, error } = await supabase
       .from('users')
       .select('id, email, personal_code')
-      .eq('email', email.toLowerCase().trim())
       .eq('personal_code', personal_code.trim())
-      .single()
+      .maybeSingle()
 
+    // maybeSingle: no row = null data, no error; .single() would return PGRST116 for 0 rows
     if (error) {
       console.error('Database query error:', error)
       return new Response(
@@ -127,7 +127,10 @@ serve(async (req) => {
 
     if (!user) {
       return new Response(
-        JSON.stringify({ error: 'Invalid email or personal code' }),
+        JSON.stringify({
+          error:
+            'Codice personale non ancora attivato; se pensi sia un errore, contatta il responsabile del sito web all\'indirizzo andrea.signorelli@unitn.it',
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
       )
     }

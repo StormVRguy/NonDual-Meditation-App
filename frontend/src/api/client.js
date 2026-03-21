@@ -16,12 +16,19 @@ export async function callEdgeFunction(functionName, options = {}) {
   console.log('Request body:', options.body)
   
   try {
-    // Parse body if it's a string
-    const body = typeof options.body === 'string' ? JSON.parse(options.body) : options.body
-    
+    // Parse body if it's a string (do not spread ...options after body — it would
+    // re-apply options.body and overwrite with a string, breaking invoke)
+    const { body: bodyInput, ...invokeOptions } = options
+    const body =
+      bodyInput === undefined
+        ? undefined
+        : typeof bodyInput === 'string'
+          ? JSON.parse(bodyInput)
+          : bodyInput
+
     const { data, error } = await supabase.functions.invoke(functionName, {
-      body: body,
-      ...options,
+      ...invokeOptions,
+      body,
     })
     
     if (error) {

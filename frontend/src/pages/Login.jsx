@@ -4,7 +4,6 @@ import { setAuth } from '../utils/auth'
 import './Login.css'
 
 function Login({ onLoginSuccess }) {
-  const [email, setEmail] = useState('')
   const [personalCode, setPersonalCode] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -16,7 +15,7 @@ function Login({ onLoginSuccess }) {
 
     try {
       const response = await callEdgeFunction('auth-login', {
-        body: JSON.stringify({ email, personal_code: personalCode }),
+        body: JSON.stringify({ personal_code: personalCode }),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -35,7 +34,10 @@ function Login({ onLoginSuccess }) {
     } catch (err) {
       console.error('Login error:', err)
       // Extract error message, handling both Error objects and other types
-      const errorMessage = err?.message || err?.error || 'Invalid email or personal code. Please try again.'
+      const errorMessage =
+        err?.message ||
+        err?.error ||
+        "Codice personale non ancora attivato; se pensi sia un errore, contatta il responsabile del sito web all'indirizzo andrea.signorelli@unitn.it"
       setError(errorMessage)
     } finally {
       setLoading(false)
@@ -46,23 +48,9 @@ function Login({ onLoginSuccess }) {
     <div className="login-container">
       <div className="login-card">
         <h1>Meditation Training</h1>
-        <p className="subtitle">Please enter your credentials to continue</p>
+        <p className="subtitle">Please enter your personal code to continue</p>
         
         <form onSubmit={handleSubmit} className="login-form">
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="your.email@example.com"
-              required
-              disabled={loading}
-              autoComplete="email"
-            />
-          </div>
-
           <div className="form-group">
             <label htmlFor="personalCode">Personal Code</label>
             <input
