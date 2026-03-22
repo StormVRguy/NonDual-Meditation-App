@@ -164,6 +164,14 @@ If Netlify still **does not list the GitHub repo**, that is a GitHub integration
 
 **Note:** Opening the app with an existing session (no new login) does not set this flag until the next successful login that day.
 
+### `daily_logs.personal_code`
+
+Column **`personal_code`** (text, denormalized) stores the user’s personal code for each row (same value as `users.personal_code` at write time). It is set by Edge Functions on upsert. **Migration:** `supabase/migrations/011_daily_logs_personal_code.sql`.
+
+JWTs issued by **`auth-login`** now include `personal_code` so logging functions can fill the column without an extra DB lookup; older tokens fall back to a lookup on `users`.
+
+Redeploy after DB migration: `auth-login`, `logs-meditation-start`, `logs-meditation-finished`, `logs-questionnaire-start`, `logs-lecture-watched`, `send-reminders` (shared helper: `supabase/functions/_shared/personal-code.ts`).
+
 ## Environment Variables
 
 See `frontend/.env.example` for required environment variables:

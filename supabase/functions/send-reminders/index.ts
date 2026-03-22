@@ -155,7 +155,7 @@ serve(async (req) => {
     // Get all users
     const { data: allUsers, error: allUsersError } = await supabase
       .from('users')
-      .select('id, email')
+      .select('id, email, personal_code')
 
     if (allUsersError) {
       console.error('Error querying all users:', allUsersError)
@@ -198,7 +198,11 @@ serve(async (req) => {
           !log.questionnaire_started_at
         return needsReminder && (!log || !log.reminder_sent_at)
       })
-      .map(user => ({ id: user.id, email: user.email }))
+      .map((user) => ({
+        id: user.id,
+        email: user.email,
+        personal_code: user.personal_code as string,
+      }))
 
     console.log(`Found ${usersNeedingReminders.length} users needing reminders for ${today}`)
 
@@ -221,6 +225,7 @@ serve(async (req) => {
           .upsert({
             user_id: user.id,
             date: today,
+            personal_code: user.personal_code,
             reminder_sent_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           }, {

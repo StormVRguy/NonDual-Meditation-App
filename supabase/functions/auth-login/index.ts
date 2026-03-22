@@ -151,10 +151,11 @@ serve(async (req) => {
       )
     }
 
-    // Create JWT token with user_id
+    // Create JWT token with user_id (personal_code included for daily_logs denormalization)
     const payload = {
       user_id: user.id,
       email: user.email,
+      personal_code: user.personal_code,
       exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60), // 7 days expiration
       iat: Math.floor(Date.now() / 1000),
     }
@@ -194,6 +195,7 @@ serve(async (req) => {
         {
           user_id: user.id,
           date: today,
+          personal_code: user.personal_code,
           logged_in_site: true,
           updated_at: new Date().toISOString(),
         },

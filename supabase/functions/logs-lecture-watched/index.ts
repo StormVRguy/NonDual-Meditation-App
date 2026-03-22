@@ -3,6 +3,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { resolvePersonalCodeForDailyLog } from '../_shared/personal-code.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -94,6 +95,7 @@ serve(async (req) => {
     }
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    const personalCode = await resolvePersonalCodeForDailyLog(supabase, userId, payload)
 
     // Get today's date in app timezone
     const appTimezone = Deno.env.get('APP_TIMEZONE') || 'America/New_York'
@@ -105,6 +107,7 @@ serve(async (req) => {
       .upsert({
         user_id: userId,
         date: today,
+        ...(personalCode ? { personal_code: personalCode } : {}),
         lecture_watched: true,
         updated_at: new Date().toISOString(),
       }, {
