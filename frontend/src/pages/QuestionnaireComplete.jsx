@@ -5,11 +5,11 @@ function QuestionnaireComplete() {
   return (
     <div className="questionnaire-complete">
       <div className="questionnaire-complete-card">
-        <h1>Thank you</h1>
-        <p>Your questionnaire responses have been submitted.</p>
-        <p className="subtext">You can close this tab or return to your dashboard.</p>
+        <h1>Grazie</h1>
+        <p>Le risposte al questionario sono state inviate.</p>
+        <p className="subtext">Puoi chiudere questa scheda o tornare alla tua dashboard.</p>
         <Link to="/" className="back-button">
-          Back to Dashboard
+          Torna alla dashboard
         </Link>
       </div>
     </div>

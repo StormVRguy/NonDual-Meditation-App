@@ -29,7 +29,7 @@ function Login({ onLoginSuccess }) {
         setAuth(response.token, user)
         onLoginSuccess()
       } else {
-        setError('Invalid response from server')
+        setError('Risposta non valida dal server')
       }
     } catch (err) {
       console.error('Login error:', err)
@@ -47,18 +47,18 @@ function Login({ onLoginSuccess }) {
   return (
     <div className="login-container">
       <div className="login-card">
-        <h1>Meditation Training</h1>
-        <p className="subtitle">Please enter your personal code to continue</p>
+        <h1>NonDuality Training - UniTN</h1>
+        <p className="subtitle">Per continuare, inserisci il tuo codice personale</p>
         
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
-            <label htmlFor="personalCode">Personal Code</label>
+            <label htmlFor="personalCode">Codice personale</label>
             <input
               id="personalCode"
               type="text"
               value={personalCode}
               onChange={(e) => setPersonalCode(e.target.value)}
-              placeholder="Enter your personal code"
+              placeholder="Inserisci il tuo codice personale"
               required
               disabled={loading}
               autoComplete="off"
@@ -76,7 +76,7 @@ function Login({ onLoginSuccess }) {
             className="login-button"
             disabled={loading}
           >
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? 'Accesso in corso...' : 'Accedi'}
           </button>
         </form>
       </div>

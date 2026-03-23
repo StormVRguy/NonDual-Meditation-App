@@ -4,7 +4,7 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables')
+  throw new Error("Variabili d'ambiente Supabase mancanti")
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
@@ -13,8 +13,28 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey)
  * Edge Functions: non-2xx responses set error.message to a generic string.
  * The real message is usually JSON `{ error: "..." }` on the Response body in error.context.
  */
+function translateServerErrorMessage(message) {
+  if (!message || typeof message !== 'string') return message
+
+  const exactMap = {
+    'Server configuration error': 'Errore di configurazione del server',
+    'Server configuration error - Supabase credentials not available':
+      'Errore di configurazione del server - credenziali Supabase non disponibili',
+    'Server configuration error - JWT_SECRET not set':
+      'Errore di configurazione del server - JWT_SECRET non impostato',
+    'Invalid JSON in request body': 'JSON non valido nel corpo della richiesta',
+    'Personal code is required': 'Il codice personale è richiesto',
+    'Database query failed': 'Richiesta al database non riuscita',
+    'Authentication failed': 'Autenticazione non riuscita',
+    'Failed to fetch meditation': 'Impossibile recuperare la meditazione',
+    'Failed to fetch lecture': 'Impossibile recuperare la lezione'
+  }
+
+  return exactMap[message] ?? message
+}
+
 async function messageFromFunctionsInvokeError(error) {
-  const fallback = error?.message || 'An error occurred'
+  const fallback = error?.message || 'Si è verificato un errore'
   const ctx = error?.context
   if (!ctx) return fallback
 
@@ -26,14 +46,14 @@ async function messageFromFunctionsInvokeError(error) {
   if (isFetchResponse) {
     try {
       const json = await ctx.clone().json()
-      if (json && typeof json.error === 'string') return json.error
-      if (json && typeof json.message === 'string') return json.message
+      if (json && typeof json.error === 'string') return translateServerErrorMessage(json.error)
+      if (json && typeof json.message === 'string') return translateServerErrorMessage(json.message)
     } catch {
       try {
         const text = await ctx.clone().text()
         if (text) {
           const parsed = JSON.parse(text)
-          if (parsed?.error) return parsed.error
+          if (parsed?.error) return translateServerErrorMessage(parsed.error)
         }
       } catch {
         /* ignore */
@@ -45,7 +65,7 @@ async function messageFromFunctionsInvokeError(error) {
   if (typeof ctx.response === 'string') {
     try {
       const parsed = JSON.parse(ctx.response)
-      if (parsed?.error) return parsed.error
+      if (parsed?.error) return translateServerErrorMessage(parsed.error)
     } catch {
       /* ignore */
     }
@@ -91,7 +111,7 @@ export async function callEdgeFunction(functionName, options = {}) {
 
     // Check if response contains an error field
     if (data && data.error) {
-      throw new Error(data.error)
+      throw new Error(translateServerErrorMessage(data.error))
     }
 
     return data
@@ -101,7 +121,7 @@ export async function callEdgeFunction(functionName, options = {}) {
       throw err
     }
     // Otherwise wrap it
-    throw new Error(err?.message || 'Failed to call Edge Function')
+    throw new Error(err?.message || 'Impossibile chiamare la funzione Edge')
   }
 }
 

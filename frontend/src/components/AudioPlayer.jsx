@@ -139,7 +139,7 @@ function AudioPlayer({ audioUrl, onPlayStart, onMostlyPlayed }) {
   if (!audioUrl) {
     return (
       <div className="audio-player-empty">
-        <p>No meditation available</p>
+        <p>Nessuna meditazione disponibile</p>
       </div>
     )
   }
@@ -162,7 +162,7 @@ function AudioPlayer({ audioUrl, onPlayStart, onMostlyPlayed }) {
         <button
           className="play-pause-button"
           onClick={isPlaying ? handlePause : handlePlay}
-          aria-label={isPlaying ? 'Pause' : 'Play'}
+          aria-label={isPlaying ? 'Pausa' : 'Riproduci'}
         >
           {isPlaying ? '⏸' : '▶'}
         </button>

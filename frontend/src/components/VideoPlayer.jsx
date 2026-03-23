@@ -126,7 +126,7 @@ function VideoPlayer({ videoUrl, onWatched }) {
   if (!videoUrl) {
     return (
       <div className="video-player-empty">
-        <p>No lecture video available</p>
+        <p>Nessun video della lezione disponibile</p>
       </div>
     )
   }
@@ -150,7 +150,7 @@ function VideoPlayer({ videoUrl, onWatched }) {
         <button
           className="play-pause-button"
           onClick={isPlaying ? handlePause : handlePlay}
-          aria-label={isPlaying ? 'Pause' : 'Play'}
+          aria-label={isPlaying ? 'Pausa' : 'Riproduci'}
         >
           {isPlaying ? '⏸' : '▶'}
         </button>
@@ -170,7 +170,7 @@ function VideoPlayer({ videoUrl, onWatched }) {
         </div>
       </div>
       {watchedFired.current && (
-        <p className="success-message">✓ Lecture watched (50%+)</p>
+        <p className="success-message">✓ Lezione video guardata (50%+)</p>
       )}
     </div>
   )

@@ -52,7 +52,7 @@ function Dashboard({ onLogout }) {
       }
     } catch (err) {
       console.error('Failed to fetch meditation:', err)
-      setError(err.message || 'Failed to load today\'s meditation')
+      setError(err.message || 'Impossibile caricare la meditazione di oggi')
     } finally {
       setLoading(false)
     }
@@ -79,7 +79,7 @@ function Dashboard({ onLogout }) {
       }
     } catch (err) {
       console.error('Failed to fetch lecture:', err)
-      setLectureError(err.message || 'Failed to load lecture video')
+      setLectureError(err.message || 'Impossibile caricare il video della lezione')
     } finally {
       setLectureLoading(false)
     }
@@ -93,7 +93,7 @@ function Dashboard({ onLogout }) {
     if (!questionnaireUnlocked) return
     let qualtricsUrl = import.meta.env.VITE_QUALTRICS_SURVEY_URL
     if (!qualtricsUrl) {
-      alert('Questionnaire URL not configured')
+      alert('URL del questionario non configurata')
       return
     }
     // Append Q_PopulateResponse to pre-fill the Codice question (see PHASE4_QUALTRICS.md)
@@ -132,11 +132,11 @@ function Dashboard({ onLogout }) {
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
-        <h1>Meditation Training Dashboard</h1>
+        <h1>Dashboard del Corso di Meditazione Non Duale</h1>
         <div className="user-info">
           <span>Codice: {user?.personal_code ?? '—'}</span>
           <button onClick={handleLogout} className="logout-button">
-            Logout
+            Esci
           </button>
         </div>
       </div>
@@ -145,19 +145,19 @@ function Dashboard({ onLogout }) {
         {loading ? (
           <div className="loading-state">
             <div className="spinner"></div>
-            <p>Loading today's meditation...</p>
+            <p>Caricamento della meditazione di oggi...</p>
           </div>
         ) : error ? (
           <div className="error-state">
             <p className="error-message">{error}</p>
             <button onClick={fetchTodayMeditation} className="retry-button">
-              Retry
+              Riprova
             </button>
           </div>
         ) : (
           <>
             <div className="meditation-section">
-              <h2>Today's Meditation</h2>
+              <h2>Meditazione di oggi</h2>
               {meditation ? (
                 <>
                   <AudioPlayer 
@@ -166,29 +166,29 @@ function Dashboard({ onLogout }) {
                     onMostlyPlayed={handleMeditationMostlyPlayed}
                   />
                   {meditationPlayed && (
-                    <p className="success-message">✓ Meditation session started</p>
+                    <p className="success-message">✓ Sessione di meditazione avviata</p>
                   )}
                 </>
               ) : (
                 <div className="no-meditation">
-                  <p>No meditation is available.</p>
-                  <p className="subtext">Please contact your administrator.</p>
+                  <p>Nessuna meditazione disponibile.</p>
+                  <p className="subtext">Contatta il responsabile del sito.</p>
                 </div>
               )}
             </div>
 
             <div className="lecture-section">
-              <h2>Latest Video Lecture</h2>
+              <h2>Ultima lezione video</h2>
               {lectureLoading ? (
                 <div className="loading-state">
                   <div className="spinner"></div>
-                  <p>Loading lecture video...</p>
+                  <p>Caricamento video della lezione...</p>
                 </div>
               ) : lectureError ? (
                 <div className="error-state">
                   <p className="error-message">{lectureError}</p>
                   <button onClick={fetchTodayLecture} className="retry-button">
-                    Retry
+                    Riprova
                   </button>
                 </div>
               ) : lecture ? (
@@ -198,32 +198,32 @@ function Dashboard({ onLogout }) {
                     onWatched={handleLectureWatched}
                   />
                   {lectureWatched && (
-                    <p className="success-message">✓ Lecture watched (50%+)</p>
+                    <p className="success-message">✓ Lezione video guardata (50%+)</p>
                   )}
                 </>
               ) : (
                 <div className="no-lecture">
-                  <p>No lecture video is available.</p>
-                  <p className="subtext">Please contact your administrator.</p>
+                  <p>Nessun video di lezione disponibile.</p>
+                  <p className="subtext">Contatta il responsabile del sito.</p>
                 </div>
               )}
             </div>
 
             <div className="questionnaire-section">
-              <h2>Daily Questionnaire</h2>
+              <h2>Questionario giornaliero</h2>
               <button 
                 onClick={handleQuestionnaireClick}
                 className="questionnaire-button"
                 disabled={!questionnaireUnlocked}
                 title={
                   questionnaireUnlocked
-                    ? 'Open questionnaire'
+                    ? 'Apri questionario'
                     : serverIsSunday
-                      ? 'Listen to most of the meditation first'
-                      : 'Questionnaire available only on Sunday'
+                      ? 'Ascolta il più possibile la meditazione prima'
+                      : 'Questionario disponibile solo la domenica'
                 }
               >
-                Complete Questionnaire
+                Compila questionario
               </button>
               {!questionnaireUnlocked ? (
                 <p className="section-description questionnaire-locked">
@@ -234,8 +234,8 @@ function Dashboard({ onLogout }) {
               ) : (
                 <p className="section-description">
                   {serverMeditationFinished && !meditationMostlyPlayed
-                    ? "Today's meditation is already recorded. You can open the questionnaire."
-                    : 'Click the button above to open today\'s questionnaire in a new window.'}
+                    ? 'La meditazione di oggi è già registrata. Puoi aprire il questionario.'
+                    : 'Fai clic sul pulsante sopra per aprire il questionario di oggi in una nuova finestra.'}
                 </p>
               )}
             </div>

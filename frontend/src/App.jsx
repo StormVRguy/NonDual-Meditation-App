@@ -29,7 +29,7 @@ function App() {
           <main className="app-main app-main--loading" aria-busy="true">
             <div className="app-loading">
               <div className="loading-spinner"></div>
-              <p>Loading...</p>
+              <p>Caricamento...</p>
             </div>
           </main>
         ) : (
