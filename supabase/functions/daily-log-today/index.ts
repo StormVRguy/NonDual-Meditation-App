@@ -41,6 +41,17 @@ function getTodayDate(timezone: string = 'America/New_York'): string {
   return `${year}-${month}-${day}`
 }
 
+function getIsSunday(timezone: string = 'America/New_York'): boolean {
+  const now = new Date()
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    weekday: 'long',
+  })
+  const parts = formatter.formatToParts(now)
+  const weekday = parts.find((p) => p.type === 'weekday')?.value
+  return typeof weekday === 'string' && weekday.toLowerCase() === 'sunday'
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -81,6 +92,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
     const appTimezone = Deno.env.get('APP_TIMEZONE') || 'America/New_York'
     const today = getTodayDate(appTimezone)
+    const isSunday = getIsSunday(appTimezone)
 
     const { data: log, error } = await supabase
       .from('daily_logs')
@@ -101,6 +113,7 @@ serve(async (req) => {
       JSON.stringify({
         date: today,
         meditation_finished: log?.meditation_finished === true,
+        is_sunday: isSunday,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )

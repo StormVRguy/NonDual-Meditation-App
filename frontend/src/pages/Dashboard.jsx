@@ -17,9 +17,11 @@ function Dashboard({ onLogout }) {
   const [meditationMostlyPlayed, setMeditationMostlyPlayed] = useState(false)
   /** True if Supabase already has meditation_finished for today (any earlier session) */
   const [serverMeditationFinished, setServerMeditationFinished] = useState(false)
+  /** True if "today" in APP_TIMEZONE is Sunday (server-calculated). */
+  const [serverIsSunday, setServerIsSunday] = useState(false)
   const [lectureWatched, setLectureWatched] = useState(false)
 
-  const questionnaireUnlocked = meditationMostlyPlayed || serverMeditationFinished
+  const questionnaireUnlocked = serverIsSunday && (meditationMostlyPlayed || serverMeditationFinished)
 
   useEffect(() => {
     fetchTodayMeditation()
@@ -31,9 +33,8 @@ function Dashboard({ onLogout }) {
     if (!token) return
     callEdgeFunctionWithUser('daily-log-today', token)
       .then((res) => {
-        if (res?.meditation_finished === true) {
-          setServerMeditationFinished(true)
-        }
+        setServerIsSunday(res?.is_sunday === true)
+        setServerMeditationFinished(res?.meditation_finished === true)
       })
       .catch((err) => console.error('Failed to fetch today daily log:', err))
   }, [])
@@ -214,13 +215,21 @@ function Dashboard({ onLogout }) {
                 onClick={handleQuestionnaireClick}
                 className="questionnaire-button"
                 disabled={!questionnaireUnlocked}
-                title={questionnaireUnlocked ? 'Open questionnaire' : 'Listen to most of the meditation first'}
+                title={
+                  questionnaireUnlocked
+                    ? 'Open questionnaire'
+                    : serverIsSunday
+                      ? 'Listen to most of the meditation first'
+                      : 'Questionnaire available only on Sunday'
+                }
               >
                 Complete Questionnaire
               </button>
               {!questionnaireUnlocked ? (
                 <p className="section-description questionnaire-locked">
-                  Listen to most of today's meditation (about 90%) to unlock the questionnaire.
+                  {!serverIsSunday
+                    ? 'Il questionario si attiva solo di domenica.'
+                    : "Ascolta il più possibile la meditazione di oggi (circa 90%) per sbloccare il questionario."}
                 </p>
               ) : (
                 <p className="section-description">
