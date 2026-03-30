@@ -128,7 +128,7 @@ serve(async (req) => {
     // Query users table for matching personal_code
     const { data: user, error } = await supabase
       .from('users')
-      .select('id, email, personal_code')
+      .select('id, email, personal_code, is_admin')
       .eq('personal_code', personal_code.trim())
       .maybeSingle()
 
@@ -156,6 +156,7 @@ serve(async (req) => {
       user_id: user.id,
       email: user.email,
       personal_code: user.personal_code,
+      is_admin: user.is_admin === true,
       exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60), // 7 days expiration
       iat: Math.floor(Date.now() / 1000),
     }
@@ -212,7 +213,8 @@ serve(async (req) => {
       user: {
         id: user.id,
         email: user.email,
-        personal_code: user.personal_code
+        personal_code: user.personal_code,
+        is_admin: user.is_admin === true,
       }
     }
     
