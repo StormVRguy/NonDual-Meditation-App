@@ -83,6 +83,60 @@ serve(async (req) => {
     const personalCode = await resolvePersonalCodeForDailyLog(supabase, userId, payload)
     const appTimezone = Deno.env.get('APP_TIMEZONE') || 'America/New_York'
     const today = getTodayDate(appTimezone)
+    const nowIso = new Date().toISOString()
+
+    const { data: activeWindow, error: activeWindowError } = await supabase
+      .from('questionnaire_windows')
+      .select('id, title, starts_at, ends_at')
+      .eq('enabled', true)
+      .lte('starts_at', nowIso)
+      .gt('ends_at', nowIso)
+      .order('starts_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (activeWindowError) {
+      console.error('Database query error (questionnaire_windows):', activeWindowError)
+      return new Response(
+        JSON.stringify({ error: activeWindowError.message || 'Database query failed' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      )
+    }
+
+    if (!activeWindow?.id) {
+      return new Response(
+        JSON.stringify({ error: 'Questionnaire not available right now' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
+      )
+    }
+
+    const { error: openError } = await supabase
+      .from('questionnaire_window_opens')
+      .insert({
+        user_id: userId,
+        window_id: activeWindow.id,
+        opened_at: nowIso,
+      })
+
+    if (openError) {
+      const message = openError?.message || 'Failed to log questionnaire window open'
+      const isUniqueViolation =
+        typeof message === 'string' &&
+        (message.includes('duplicate key value') || message.includes('unique') || message.includes('questionnaire_window_opens_unique_user_window'))
+
+      if (isUniqueViolation) {
+        return new Response(
+          JSON.stringify({ error: 'Questionnaire already opened for this window' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 409 }
+        )
+      }
+
+      console.error('Database insert error (questionnaire_window_opens):', openError)
+      return new Response(
+        JSON.stringify({ error: message }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      )
+    }
 
     const { data, error } = await supabase
       .from('daily_logs')
@@ -108,7 +162,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, log: data }),
+      JSON.stringify({ success: true, window: activeWindow, log: data }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
   } catch (error) {

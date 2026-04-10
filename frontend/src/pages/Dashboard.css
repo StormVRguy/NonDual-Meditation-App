@@ -169,6 +169,12 @@
   font-weight: 500;
 }
 
+.questionnaire-window {
+  margin-top: 8px;
+  opacity: 0.9;
+  font-variant-numeric: tabular-nums;
+}
+
 .section-description {
   color: #666;
   font-size: 14px;

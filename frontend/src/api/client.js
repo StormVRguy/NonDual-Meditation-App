@@ -27,7 +27,15 @@ function translateServerErrorMessage(message) {
     'Database query failed': 'Richiesta al database non riuscita',
     'Authentication failed': 'Autenticazione non riuscita',
     'Failed to fetch meditation': 'Impossibile recuperare la meditazione',
-    'Failed to fetch lecture': 'Impossibile recuperare la lezione'
+    'Failed to fetch lecture': 'Impossibile recuperare la lezione',
+
+    // Questionnaire windows
+    'Questionnaire not available right now': 'Il questionario non è disponibile in questo momento',
+    'Questionnaire already opened for this window':
+      'Hai già compilato il questionario per questa finestra',
+    'Invalid window time range': 'Intervallo della finestra non valido',
+    Forbidden: 'Accesso negato',
+    'Missing id': 'Parametro mancante: id',
   }
 
   return exactMap[message] ?? message

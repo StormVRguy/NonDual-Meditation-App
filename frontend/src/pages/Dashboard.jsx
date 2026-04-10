@@ -5,6 +5,22 @@ import AudioPlayer from '../components/AudioPlayer'
 import VideoPlayer from '../components/VideoPlayer'
 import './Dashboard.css'
 
+const APP_TIMEZONE = 'Europe/Rome'
+
+function formatRomeDateTime(iso) {
+  if (!iso) return '—'
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return '—'
+  return new Intl.DateTimeFormat('it-IT', {
+    timeZone: APP_TIMEZONE,
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(d)
+}
+
 function Dashboard({ onLogout }) {
   const user = getUser()
   const [meditation, setMeditation] = useState(null)
@@ -17,26 +33,35 @@ function Dashboard({ onLogout }) {
   const [meditationMostlyPlayed, setMeditationMostlyPlayed] = useState(false)
   /** True if Supabase already has meditation_finished for today (any earlier session) */
   const [serverMeditationFinished, setServerMeditationFinished] = useState(false)
-  /** True if "today" in APP_TIMEZONE is Sunday (server-calculated). */
-  const [serverIsSunday, setServerIsSunday] = useState(false)
+  /** Active questionnaire window, if any (server-calculated). */
+  const [activeWindow, setActiveWindow] = useState(null)
+  const [hasOpenedInActiveWindow, setHasOpenedInActiveWindow] = useState(false)
   const [lectureWatched, setLectureWatched] = useState(false)
 
-  const questionnaireUnlocked = serverIsSunday && (meditationMostlyPlayed || serverMeditationFinished)
+  const isMeditationEnough = meditationMostlyPlayed || serverMeditationFinished
+  const isWithinWindow = Boolean(activeWindow?.id)
+  const questionnaireUnlocked = isWithinWindow && !hasOpenedInActiveWindow && isMeditationEnough
 
   useEffect(() => {
     fetchTodayMeditation()
     fetchTodayLecture()
   }, [])
 
-  useEffect(() => {
+  const refreshDailyLog = async () => {
     const token = getToken()
     if (!token) return
-    callEdgeFunctionWithUser('daily-log-today', token)
-      .then((res) => {
-        setServerIsSunday(res?.is_sunday === true)
-        setServerMeditationFinished(res?.meditation_finished === true)
-      })
-      .catch((err) => console.error('Failed to fetch today daily log:', err))
+    try {
+      const res = await callEdgeFunctionWithUser('daily-log-today', token)
+      setServerMeditationFinished(res?.meditation_finished === true)
+      setActiveWindow(res?.active_window ?? null)
+      setHasOpenedInActiveWindow(res?.has_opened_in_active_window === true)
+    } catch (err) {
+      console.error('Failed to fetch today daily log:', err)
+    }
+  }
+
+  useEffect(() => {
+    refreshDailyLog()
   }, [])
 
   const fetchTodayMeditation = async () => {
@@ -120,8 +145,12 @@ function Dashboard({ onLogout }) {
       }
     } catch (err) {
       console.error('Failed to log questionnaire start:', err)
+      alert(err?.message || 'Impossibile aprire il questionario in questo momento')
+      await refreshDailyLog()
+      return
     }
     window.open(qualtricsUrl, '_blank')
+    await refreshDailyLog()
   }
 
   const handleLogout = () => {
@@ -178,11 +207,11 @@ function Dashboard({ onLogout }) {
             </div>
 
             <div className="lecture-section">
-              <h2>Ultima lezione video</h2>
+              <h2>Video dell'ultima lezione</h2>
               {lectureLoading ? (
                 <div className="loading-state">
                   <div className="spinner"></div>
-                  <p>Caricamento video della lezione...</p>
+                  <p>Caricamento del video...</p>
                 </div>
               ) : lectureError ? (
                 <div className="error-state">
@@ -198,12 +227,12 @@ function Dashboard({ onLogout }) {
                     onWatched={handleLectureWatched}
                   />
                   {lectureWatched && (
-                    <p className="success-message">✓ Lezione video guardata (50%+)</p>
+                    <p className="success-message">✓ Lezione guardata (50%+)</p>
                   )}
                 </>
               ) : (
                 <div className="no-lecture">
-                  <p>Nessun video di lezione disponibile.</p>
+                  <p>Nessun video disponibile.</p>
                   <p className="subtext">Contatta il responsabile del sito.</p>
                 </div>
               )}
@@ -218,26 +247,37 @@ function Dashboard({ onLogout }) {
                 title={
                   questionnaireUnlocked
                     ? 'Apri questionario'
-                    : serverIsSunday
-                      ? 'Ascolta il più possibile la meditazione prima'
-                      : 'Questionario disponibile solo la domenica'
+                    : !isWithinWindow
+                      ? 'Questionario non disponibile in questo momento'
+                      : hasOpenedInActiveWindow
+                        ? 'Hai già compilato il questionario per questa finestra'
+                        : 'Svolgi la meditazione di oggi per sbloccare il questionario'
                 }
               >
                 Compila questionario
               </button>
               {!questionnaireUnlocked ? (
                 <p className="section-description questionnaire-locked">
-                  {!serverIsSunday
-                    ? 'Il questionario si attiva solo di domenica.'
-                    : "Ascolta il più possibile la meditazione di oggi (circa 90%) per sbloccare il questionario."}
+                  {!isWithinWindow ? (
+                    'Il questionario non è disponibile in questo momento.'
+                  ) : hasOpenedInActiveWindow ? (
+                    'Hai già compilato il questionario per questa finestra.'
+                  ) : (
+                    "Ascolta il più possibile la meditazione di oggi (circa 90%) per sbloccare il questionario."
+                  )}
                 </p>
               ) : (
                 <p className="section-description">
                   {serverMeditationFinished && !meditationMostlyPlayed
-                    ? 'La meditazione di oggi è già registrata. Puoi aprire il questionario.'
+                    ? 'Hai completato la meditazione di oggi! Puoi aprire il questionario.'
                     : 'Fai clic sul pulsante sopra per aprire il questionario di oggi in una nuova finestra.'}
                 </p>
               )}
+              {activeWindow?.starts_at && activeWindow?.ends_at ? (
+                <p className="section-description questionnaire-window">
+                  Finestra attiva (Roma): {formatRomeDateTime(activeWindow.starts_at)} → {formatRomeDateTime(activeWindow.ends_at)}
+                </p>
+              ) : null}
             </div>
           </>
         )}

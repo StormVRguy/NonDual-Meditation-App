@@ -93,6 +93,44 @@ serve(async (req) => {
     const appTimezone = Deno.env.get('APP_TIMEZONE') || 'America/New_York'
     const today = getTodayDate(appTimezone)
     const isSunday = getIsSunday(appTimezone)
+    const nowIso = new Date().toISOString()
+
+    const { data: activeWindow, error: activeWindowError } = await supabase
+      .from('questionnaire_windows')
+      .select('id, title, starts_at, ends_at')
+      .eq('enabled', true)
+      .lte('starts_at', nowIso)
+      .gt('ends_at', nowIso)
+      .order('starts_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (activeWindowError) {
+      console.error('Database query error (questionnaire_windows):', activeWindowError)
+      return new Response(
+        JSON.stringify({ error: activeWindowError.message || 'Database query failed' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      )
+    }
+
+    let hasOpenedInActiveWindow = false
+    if (activeWindow?.id) {
+      const { data: openRow, error: openError } = await supabase
+        .from('questionnaire_window_opens')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('window_id', activeWindow.id)
+        .maybeSingle()
+
+      if (openError) {
+        console.error('Database query error (questionnaire_window_opens):', openError)
+        return new Response(
+          JSON.stringify({ error: openError.message || 'Database query failed' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        )
+      }
+      hasOpenedInActiveWindow = Boolean(openRow?.id)
+    }
 
     const { data: log, error } = await supabase
       .from('daily_logs')
@@ -114,6 +152,15 @@ serve(async (req) => {
         date: today,
         meditation_finished: log?.meditation_finished === true,
         is_sunday: isSunday,
+        active_window: activeWindow
+          ? {
+              id: activeWindow.id,
+              title: activeWindow.title ?? null,
+              starts_at: activeWindow.starts_at,
+              ends_at: activeWindow.ends_at,
+            }
+          : null,
+        has_opened_in_active_window: hasOpenedInActiveWindow,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
