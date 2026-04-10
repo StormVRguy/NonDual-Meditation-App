@@ -263,7 +263,7 @@ function Dashboard({ onLogout }) {
                   ) : hasOpenedInActiveWindow ? (
                     'Hai già compilato il questionario per questa finestra.'
                   ) : (
-                    "Ascolta il più possibile la meditazione di oggi (circa 90%) per sbloccare il questionario."
+                    "Svolgi la meditazione giornaliera per sbloccare il questionario."
                   )}
                 </p>
               ) : (
