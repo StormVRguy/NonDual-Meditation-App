@@ -19,6 +19,7 @@ function AudioPlayer({ audioUrl, onPlayStart, onMostlyPlayed }) {
   const [currentTime, setCurrentTime] = useState(0)
   const [hasLogged, setHasLogged] = useState(false)
   const [secondsPlayed, setSecondsPlayed] = useState(0)
+  const [playbackError, setPlaybackError] = useState('')
 
   useEffect(() => {
     const audio = audioRef.current
@@ -31,6 +32,23 @@ function AudioPlayer({ audioUrl, onPlayStart, onMostlyPlayed }) {
       audio.removeEventListener('loadedmetadata', updateDuration)
     }
   }, [])
+
+  // When src changes, force a reload (helps some browsers when switching sources).
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+    setIsPlaying(false)
+    setPlaybackError('')
+    totalSecondsPlayedRef.current = 0
+    setSecondsPlayed(0)
+    setCurrentTime(0)
+    setDuration(0)
+    try {
+      audio.load()
+    } catch {
+      // ignore
+    }
+  }, [audioUrl])
 
   useEffect(() => {
     const audio = audioRef.current
@@ -107,7 +125,14 @@ function AudioPlayer({ audioUrl, onPlayStart, onMostlyPlayed }) {
       await audio.play()
       setIsPlaying(true)
     } catch (error) {
-      console.error('Failed to play audio:', error)
+      const currentSrc = audio?.currentSrc || audioUrl
+      const mediaErr = audio?.error
+      console.error('Failed to play audio:', error, { currentSrc, mediaErr })
+      setPlaybackError(
+        error?.name === 'NotSupportedError'
+          ? 'Il file audio non è supportato dal browser.'
+          : 'Impossibile riprodurre l’audio in questo momento.'
+      )
     }
   }
 
@@ -149,6 +174,12 @@ function AudioPlayer({ audioUrl, onPlayStart, onMostlyPlayed }) {
       <audio
         ref={audioRef}
         src={audioUrl}
+        onError={() => {
+          const audio = audioRef.current
+          const mediaErr = audio?.error
+          console.error('Audio element error', { currentSrc: audio?.currentSrc, mediaErr })
+          setPlaybackError('Errore nel caricamento dell’audio.')
+        }}
         onEnded={() => {
           setIsPlaying(false)
           const audio = audioRef.current
@@ -181,6 +212,7 @@ function AudioPlayer({ audioUrl, onPlayStart, onMostlyPlayed }) {
           </div>
         </div>
       </div>
+      {playbackError ? <p className="error-message">{playbackError}</p> : null}
     </div>
   )
 }

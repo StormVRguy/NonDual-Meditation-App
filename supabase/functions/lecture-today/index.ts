@@ -28,6 +28,46 @@ function decodeJWT(token: string): any {
   }
 }
 
+async function urlLooksPlayable(url: string): Promise<boolean> {
+  try {
+    const res = await fetch(url, { method: 'HEAD' })
+    return res.ok
+  } catch {
+    return false
+  }
+}
+
+async function latestFromStorage(
+  // deno-lint-ignore no-explicit-any
+  supabase: any,
+  bucket: string,
+  userGroup: string,
+): Promise<{ file_url: string; path: string } | null> {
+  const folder = userGroup ? userGroup : ''
+
+  const { data, error } = await supabase.storage.from(bucket).list(folder, {
+    limit: 100,
+    offset: 0,
+    sortBy: { column: 'updated_at', order: 'desc' },
+  })
+
+  if (error) {
+    console.error('Storage list error:', error)
+    return null
+  }
+
+  const files = Array.isArray(data) ? data : []
+  const candidate = files.find((f: any) => typeof f?.name === 'string' && f.name.length > 0)
+  if (!candidate) return null
+
+  const path = folder ? `${folder}/${candidate.name}` : `${candidate.name}`
+  const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path)
+  const url = pub?.publicUrl
+  if (!url || typeof url !== 'string') return null
+
+  return { file_url: url, path }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -71,8 +111,12 @@ serve(async (req) => {
 
     if (error) {
       if (error.code === 'PGRST116') {
+        const fallback = await latestFromStorage(supabase, 'lectures', userGroup)
         return new Response(
-          JSON.stringify({ lecture: null, message: 'No lecture available' }),
+          JSON.stringify({
+            lecture: fallback ? { id: null, date: null, file_url: fallback.file_url } : null,
+            message: fallback ? null : 'No lecture available',
+          }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
         )
       }
@@ -83,7 +127,23 @@ serve(async (req) => {
       )
     }
 
-    if (!lectureFile) {
+    let fileUrl = lectureFile?.file_url
+    if (typeof fileUrl === 'string' && fileUrl.trim()) {
+      const ok = await urlLooksPlayable(fileUrl)
+      if (!ok) {
+        console.warn('[lecture-today] DB file_url not reachable; falling back to storage', { fileUrl })
+        fileUrl = null
+      }
+    } else {
+      fileUrl = null
+    }
+
+    if (!fileUrl) {
+      const fallback = await latestFromStorage(supabase, 'lectures', userGroup)
+      fileUrl = fallback?.file_url ?? null
+    }
+
+    if (!fileUrl) {
       return new Response(
         JSON.stringify({ lecture: null, message: 'No lecture available' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
@@ -93,9 +153,9 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         lecture: {
-          id: lectureFile.id,
-          date: lectureFile.date,
-          file_url: lectureFile.file_url,
+          id: lectureFile?.id ?? null,
+          date: lectureFile?.date ?? null,
+          file_url: fileUrl,
         },
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }

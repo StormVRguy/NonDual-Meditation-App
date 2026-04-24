@@ -28,6 +28,49 @@ function decodeJWT(token: string): any {
   }
 }
 
+async function urlLooksPlayable(url: string): Promise<boolean> {
+  try {
+    const res = await fetch(url, { method: 'HEAD' })
+    return res.ok
+  } catch {
+    return false
+  }
+}
+
+async function latestFromStorage(
+  // deno-lint-ignore no-explicit-any
+  supabase: any,
+  bucket: string,
+  userGroup: string,
+): Promise<{ file_url: string; path: string } | null> {
+  // Convention: group-specific files live under "<group>/" folder. Empty group uses bucket root.
+  // Supabase Storage list() expects folder name without trailing slash.
+  const folder = userGroup ? userGroup : ''
+
+  // List and pick the newest file by updated_at/created_at.
+  const { data, error } = await supabase.storage.from(bucket).list(folder, {
+    limit: 100,
+    offset: 0,
+    sortBy: { column: 'updated_at', order: 'desc' },
+  })
+
+  if (error) {
+    console.error('Storage list error:', error)
+    return null
+  }
+
+  const files = Array.isArray(data) ? data : []
+  const candidate = files.find((f: any) => typeof f?.name === 'string' && f.name.length > 0)
+  if (!candidate) return null
+
+  const path = folder ? `${folder}/${candidate.name}` : `${candidate.name}`
+  const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path)
+  const url = pub?.publicUrl
+  if (!url || typeof url !== 'string') return null
+
+  return { file_url: url, path }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -71,8 +114,14 @@ serve(async (req) => {
 
     if (error) {
       if (error.code === 'PGRST116') {
+        const fallback = await latestFromStorage(supabase, 'meditations', userGroup)
         return new Response(
-          JSON.stringify({ meditation: null, message: 'No meditation available' }),
+          JSON.stringify({
+            meditation: fallback
+              ? { id: null, date: null, file_url: fallback.file_url }
+              : null,
+            message: fallback ? null : 'No meditation available',
+          }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
         )
       }
@@ -83,7 +132,23 @@ serve(async (req) => {
       )
     }
 
-    if (!meditationFile) {
+    let fileUrl = meditationFile?.file_url
+    if (typeof fileUrl === 'string' && fileUrl.trim()) {
+      const ok = await urlLooksPlayable(fileUrl)
+      if (!ok) {
+        console.warn('[meditation-today] DB file_url not reachable; falling back to storage', { fileUrl })
+        fileUrl = null
+      }
+    } else {
+      fileUrl = null
+    }
+
+    if (!fileUrl) {
+      const fallback = await latestFromStorage(supabase, 'meditations', userGroup)
+      fileUrl = fallback?.file_url ?? null
+    }
+
+    if (!fileUrl) {
       return new Response(
         JSON.stringify({ meditation: null, message: 'No meditation available' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
@@ -93,9 +158,9 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         meditation: {
-          id: meditationFile.id,
-          date: meditationFile.date,
-          file_url: meditationFile.file_url,
+          id: meditationFile?.id ?? null,
+          date: meditationFile?.date ?? null,
+          file_url: fileUrl,
         },
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
