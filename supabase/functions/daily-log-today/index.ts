@@ -3,6 +3,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { resolveUserGroup } from '../_shared/resolve-group.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -95,10 +96,13 @@ serve(async (req) => {
     const isSunday = getIsSunday(appTimezone)
     const nowIso = new Date().toISOString()
 
+    const userGroup = await resolveUserGroup(supabase, userId)
+
     const { data: activeWindow, error: activeWindowError } = await supabase
       .from('questionnaire_windows')
       .select('id, title, starts_at, ends_at')
       .eq('enabled', true)
+      .eq('"group"', userGroup)
       .lte('starts_at', nowIso)
       .gt('ends_at', nowIso)
       .order('starts_at', { ascending: false })

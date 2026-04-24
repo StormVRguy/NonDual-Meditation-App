@@ -71,6 +71,7 @@ function AdminDashboard({ onLogout }) {
   const [newTitle, setNewTitle] = useState('')
   const [newStartsAt, setNewStartsAt] = useState('')
   const [newEndsAt, setNewEndsAt] = useState('')
+  const [newGroup, setNewGroup] = useState('Exp1')
 
   const fetchSummary = async () => {
     try {
@@ -138,11 +139,13 @@ function AdminDashboard({ onLogout }) {
           starts_at: startsAtIso,
           ends_at: endsAtIso,
           enabled: true,
+          group: newGroup?.trim() ? newGroup.trim() : '',
         },
       })
       setNewTitle('')
       setNewStartsAt('')
       setNewEndsAt('')
+      // keep group selection as-is for faster entry
       await fetchWindows()
     } catch (err) {
       console.error('Failed to create window:', err)
@@ -246,6 +249,7 @@ function AdminDashboard({ onLogout }) {
                 <thead>
                   <tr>
                     <th>Codice personale</th>
+                    <th>Gruppo</th>
                     <th>Meditazioni completate</th>
                     <th>Questionari aperti</th>
                     <th>Meditazione oggi</th>
@@ -255,6 +259,7 @@ function AdminDashboard({ onLogout }) {
                   {rows.map((r) => (
                     <tr key={r.personal_code}>
                       <td className="admin-code-cell">{r.personal_code}</td>
+                      <td className="admin-group-cell">{r.group || '—'}</td>
                       <td>{Number.isFinite(r.meditation_days) ? r.meditation_days : 0}</td>
                       <td>{Number.isFinite(r.questionnaires) ? r.questionnaires : 0}</td>
                       <td>
@@ -272,7 +277,7 @@ function AdminDashboard({ onLogout }) {
                   ))}
                   {rows.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="admin-empty">
+                      <td colSpan={5} className="admin-empty">
                         Nessun dato disponibile.
                       </td>
                     </tr>
@@ -299,6 +304,17 @@ function AdminDashboard({ onLogout }) {
                       value={newTitle}
                       onChange={(e) => setNewTitle(e.target.value)}
                       placeholder="Es. Finestra Maggio"
+                      type="text"
+                    />
+                  </label>
+                </div>
+                <div className="admin-window-form-row">
+                  <label className="admin-field">
+                    <span className="admin-field-label">Gruppo</span>
+                    <input
+                      value={newGroup}
+                      onChange={(e) => setNewGroup(e.target.value)}
+                      placeholder="Es. Exp1"
                       type="text"
                     />
                   </label>
@@ -334,6 +350,7 @@ function AdminDashboard({ onLogout }) {
                         <div className="admin-window-range">
                           {formatRomeDateTime(w.starts_at)} → {formatRomeDateTime(w.ends_at)}
                         </div>
+                        <div className="admin-window-id">Gruppo: {w.group?.trim?.() ? w.group : '—'}</div>
                         <div className="admin-window-id">{w.id}</div>
                       </div>
                       <div className="admin-window-actions">

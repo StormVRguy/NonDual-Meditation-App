@@ -40,7 +40,9 @@ function Dashboard({ onLogout }) {
 
   const isMeditationEnough = meditationMostlyPlayed || serverMeditationFinished
   const isWithinWindow = Boolean(activeWindow?.id)
-  const questionnaireUnlocked = isWithinWindow && !hasOpenedInActiveWindow && isMeditationEnough
+  // Button should stay clickable for the whole active window (as long as meditation is enough),
+  // even if the user already opened it in this window.
+  const questionnaireClickable = isWithinWindow && isMeditationEnough
 
   useEffect(() => {
     fetchTodayMeditation()
@@ -68,7 +70,10 @@ function Dashboard({ onLogout }) {
     try {
       setLoading(true)
       setError('')
-      const response = await callEdgeFunction('meditation-today')
+      const token = getToken()
+      const response = token
+        ? await callEdgeFunctionWithUser('meditation-today', token)
+        : await callEdgeFunction('meditation-today')
       
       if (response.meditation) {
         setMeditation(response.meditation)
@@ -95,7 +100,10 @@ function Dashboard({ onLogout }) {
     try {
       setLectureLoading(true)
       setLectureError('')
-      const response = await callEdgeFunction('lecture-today')
+      const token = getToken()
+      const response = token
+        ? await callEdgeFunctionWithUser('lecture-today', token)
+        : await callEdgeFunction('lecture-today')
       
       if (response.lecture) {
         setLecture(response.lecture)
@@ -115,7 +123,7 @@ function Dashboard({ onLogout }) {
   }
 
   const handleQuestionnaireClick = async () => {
-    if (!questionnaireUnlocked) return
+    if (!questionnaireClickable) return
     let qualtricsUrl = import.meta.env.VITE_QUALTRICS_SURVEY_URL
     if (!qualtricsUrl) {
       alert('URL del questionario non configurata')
@@ -138,16 +146,20 @@ function Dashboard({ onLogout }) {
       if (!personalCode) console.warn('[Questionnaire] No personal_code on user – re-login may be needed. Not adding Q_PopulateResponse.')
       if (!codiceQid) console.warn('[Questionnaire] VITE_QUALTRICS_CODICE_QID not set. Set it to the question’s QID (e.g. QID5), not the export code "Codice".')
     }
-    try {
-      const token = getToken()
-      if (token) {
-        await callEdgeFunctionWithUser('logs-questionnaire-start', token)
+    // If already opened in this active window, allow reopening without logging again
+    // (server enforces 1 open per window).
+    if (!hasOpenedInActiveWindow) {
+      try {
+        const token = getToken()
+        if (token) {
+          await callEdgeFunctionWithUser('logs-questionnaire-start', token)
+        }
+      } catch (err) {
+        console.error('Failed to log questionnaire start:', err)
+        alert(err?.message || 'Impossibile aprire il questionario in questo momento')
+        await refreshDailyLog()
+        return
       }
-    } catch (err) {
-      console.error('Failed to log questionnaire start:', err)
-      alert(err?.message || 'Impossibile aprire il questionario in questo momento')
-      await refreshDailyLog()
-      return
     }
     window.open(qualtricsUrl, '_blank')
     await refreshDailyLog()
@@ -243,34 +255,32 @@ function Dashboard({ onLogout }) {
               <button 
                 onClick={handleQuestionnaireClick}
                 className="questionnaire-button"
-                disabled={!questionnaireUnlocked}
+                disabled={!questionnaireClickable}
                 title={
-                  questionnaireUnlocked
+                  questionnaireClickable
                     ? 'Apri questionario'
                     : !isWithinWindow
                       ? 'Questionario non disponibile in questo momento'
-                      : hasOpenedInActiveWindow
-                        ? 'Hai già compilato il questionario per questa finestra'
-                        : 'Svolgi la meditazione di oggi per sbloccare il questionario'
+                      : 'Svolgi la meditazione di oggi per sbloccare il questionario'
                 }
               >
                 Compila questionario
               </button>
-              {!questionnaireUnlocked ? (
+              {!questionnaireClickable ? (
                 <p className="section-description questionnaire-locked">
                   {!isWithinWindow ? (
                     'Il questionario non è disponibile in questo momento.'
-                  ) : hasOpenedInActiveWindow ? (
-                    'Hai già compilato il questionario per questa finestra.'
                   ) : (
                     "Svolgi la meditazione giornaliera per sbloccare il questionario."
                   )}
                 </p>
               ) : (
                 <p className="section-description">
-                  {serverMeditationFinished && !meditationMostlyPlayed
-                    ? 'Hai completato la meditazione di oggi! Puoi aprire il questionario.'
-                    : 'Fai clic sul pulsante sopra per aprire il questionario di oggi in una nuova finestra.'}
+                  {hasOpenedInActiveWindow
+                    ? 'Hai già compilato il questionario per questa finestra. Puoi comunque riaprirlo finché la finestra è attiva.'
+                    : serverMeditationFinished && !meditationMostlyPlayed
+                      ? 'Hai completato la meditazione di oggi! Puoi aprire il questionario.'
+                      : 'Fai clic sul pulsante sopra per aprire il questionario di oggi in una nuova finestra.'}
                 </p>
               )}
               {activeWindow?.starts_at && activeWindow?.ends_at ? (

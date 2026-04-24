@@ -4,6 +4,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { resolvePersonalCodeForDailyLog } from '../_shared/personal-code.ts'
+import { resolveUserGroup } from '../_shared/resolve-group.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -81,6 +82,7 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
     const personalCode = await resolvePersonalCodeForDailyLog(supabase, userId, payload)
+    const userGroup = await resolveUserGroup(supabase, userId)
     const appTimezone = Deno.env.get('APP_TIMEZONE') || 'America/New_York'
     const today = getTodayDate(appTimezone)
     const nowIso = new Date().toISOString()
@@ -89,6 +91,7 @@ serve(async (req) => {
       .from('questionnaire_windows')
       .select('id, title, starts_at, ends_at')
       .eq('enabled', true)
+      .eq('"group"', userGroup)
       .lte('starts_at', nowIso)
       .gt('ends_at', nowIso)
       .order('starts_at', { ascending: false })

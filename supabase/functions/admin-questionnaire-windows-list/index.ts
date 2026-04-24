@@ -98,7 +98,7 @@ serve(async (req) => {
 
     const { data: windows, error } = await supabase
       .from('questionnaire_windows')
-      .select('id, title, starts_at, ends_at, enabled, created_at, updated_at')
+      .select('id, title, starts_at, ends_at, enabled, "group", created_at, updated_at')
       .order('starts_at', { ascending: false })
       .limit(limit)
 

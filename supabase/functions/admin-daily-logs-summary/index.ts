@@ -43,6 +43,7 @@ function getTodayDate(timezone: string = 'America/New_York'): string {
 
 type SummaryRow = {
   personal_code: string
+  group: string
   meditation_days: number
   questionnaires: number
   meditation_today: boolean
@@ -119,6 +120,27 @@ serve(async (req) => {
     const appTimezone = Deno.env.get('APP_TIMEZONE') || 'America/New_York'
     const today = getTodayDate(appTimezone)
 
+    // Fetch all non-admin users to get their group (join in-memory with daily_logs)
+    const { data: allUsers, error: usersError } = await supabase
+      .from('users')
+      .select('personal_code, "group"')
+      .eq('is_admin', false)
+
+    if (usersError) {
+      console.error('Database query error (users):', usersError)
+      return new Response(JSON.stringify({ error: usersError.message || 'Database query failed' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      })
+    }
+
+    // Build personal_code → group lookup
+    const groupByCode = new Map<string, string>()
+    for (const u of allUsers ?? []) {
+      const code = (u as any)?.personal_code
+      if (code) groupByCode.set(code, (u as any)?.group ?? '')
+    }
+
     // Fetch raw daily logs and aggregate in-memory.
     // This keeps schema simple (no extra SQL functions/views) and is fine for modest dataset sizes.
     const { data: logs, error: logsError } = await supabase
@@ -143,6 +165,7 @@ serve(async (req) => {
       if (!row) {
         row = {
           personal_code: code,
+          group: groupByCode.get(code) ?? '',
           meditation_days: 0,
           questionnaires: 0,
           meditation_today: false,

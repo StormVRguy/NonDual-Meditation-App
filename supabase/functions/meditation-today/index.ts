@@ -1,12 +1,31 @@
 // Edge Function: meditation-today
-// Returns the single active meditation (same for all users, every day)
+// Returns the most recent meditation file for the requesting user's group.
+// Accepts an optional user_token in the body to resolve the group from DB.
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { resolveUserGroup } from '../_shared/resolve-group.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+function base64UrlDecode(str: string): string {
+  let base64 = str.replace(/-/g, '+').replace(/_/g, '/')
+  const padding = base64.length % 4
+  if (padding) base64 += '='.repeat(4 - padding)
+  return atob(base64)
+}
+
+function decodeJWT(token: string): any {
+  try {
+    const parts = token.split('.')
+    if (parts.length !== 3) return null
+    return JSON.parse(base64UrlDecode(parts[1]))
+  } catch {
+    return null
+  }
 }
 
 serve(async (req) => {
@@ -17,20 +36,35 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    
+
     if (!supabaseUrl || !supabaseServiceKey) {
       return new Response(
         JSON.stringify({ error: 'Server configuration error' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       )
     }
-    
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Single active meditation: get the most recent one by created_at
+    // Resolve user group from token (if provided)
+    let userGroup = ''
+    try {
+      const body = await req.json().catch(() => ({}))
+      const token = body?.user_token
+      if (token) {
+        const payload = decodeJWT(token)
+        if (payload?.user_id) {
+          userGroup = await resolveUserGroup(supabase, payload.user_id)
+        }
+      }
+    } catch {
+      // No body or invalid JSON — fall back to empty group
+    }
+
     const { data: meditationFile, error } = await supabase
       .from('meditation_files')
       .select('id, date, file_url')
+      .eq('"group"', userGroup)
       .order('created_at', { ascending: false })
       .limit(1)
       .single()
@@ -57,12 +91,12 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         meditation: {
           id: meditationFile.id,
           date: meditationFile.date,
-          file_url: meditationFile.file_url
-        }
+          file_url: meditationFile.file_url,
+        },
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )

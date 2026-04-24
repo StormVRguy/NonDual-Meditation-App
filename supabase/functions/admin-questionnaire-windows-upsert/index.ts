@@ -33,6 +33,7 @@ type UpsertBody = {
   starts_at?: string
   ends_at?: string
   enabled?: boolean
+  group?: string | null
 }
 
 function isValidIsoDateTime(value: unknown): value is string {
@@ -127,12 +128,19 @@ serve(async (req) => {
 
     const enabled = body?.enabled === false ? false : true
     const title = typeof body?.title === 'string' ? body.title.trim() : body?.title === null ? null : null
+    const group =
+      typeof body?.group === 'string'
+        ? body.group.trim()
+        : body?.group === null
+          ? ''
+          : ''
 
     const payloadRow: Record<string, unknown> = {
       starts_at: startsAt.toISOString(),
       ends_at: endsAt.toISOString(),
       enabled,
       title,
+      group,
       updated_at: new Date().toISOString(),
     }
     if (typeof body?.id === 'string' && body.id.trim()) {
@@ -142,7 +150,7 @@ serve(async (req) => {
     const { data: windowRow, error } = await supabase
       .from('questionnaire_windows')
       .upsert(payloadRow, { onConflict: 'id' })
-      .select('id, title, starts_at, ends_at, enabled, created_at, updated_at')
+      .select('id, title, starts_at, ends_at, enabled, "group", created_at, updated_at')
       .single()
 
     if (error) {
