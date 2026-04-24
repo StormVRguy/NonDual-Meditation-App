@@ -99,7 +99,7 @@ function App() {
             </Routes>
           </main>
         )}
-        <SiteFooter />
+        <SiteFooter showMeditationContact={!admin} />
       </div>
     </BrowserRouter>
   )

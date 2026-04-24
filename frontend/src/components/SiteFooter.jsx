@@ -1,6 +1,6 @@
 import './SiteFooter.css'
 
-function SiteFooter() {
+function SiteFooter({ showMeditationContact = false }) {
   return (
     <footer className="site-footer" role="contentinfo">
       <div className="site-footer-inner">
@@ -17,6 +17,12 @@ function SiteFooter() {
             <strong>Sito / questionario online</strong>:{' '}
             <a href="mailto:andrea.signorelli@unitn.it">andrea.signorelli@unitn.it</a>
           </span>
+          {showMeditationContact ? (
+            <span className="site-footer-contact-item">
+              <strong>Meditazione / pratiche di riduzione del rischio</strong>:{' '}
+              <a href="mailto:c.mascarello@centrostudiubi.it">c.mascarello@centrostudiubi.it</a>
+            </span>
+          ) : null}
         </p>
       </div>
     </footer>

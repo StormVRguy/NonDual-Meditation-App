@@ -197,6 +197,20 @@ function Dashboard({ onLogout }) {
           </div>
         ) : (
           <>
+            <div className="daily-practices">
+              <h2>PRATICHE QUOTIDIANE</h2>
+              <ul className="daily-practices-list">
+                <li>
+                  <strong>MEDITAZIONE FORMALE</strong>: Praticare il body-scan ogni giorno, seguendo la traccia audio
+                </li>
+                <li>
+                  <strong>MEDITAZIONE INFORMALE</strong>: Durante la giornata, concedersi qualche momento di
+                  consapevolezza – qualche minuto per lasciare andare ogni pensiero e attività, e prendere
+                  consapevolezza di corpo, respiro, stato d’animo e ambiente circostante.
+                </li>
+              </ul>
+            </div>
+
             <div className="meditation-section">
               <h2>Meditazione di oggi</h2>
               {meditation ? (
