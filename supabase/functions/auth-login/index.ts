@@ -125,11 +125,13 @@ serve(async (req) => {
       )
     }
 
-    // Query users table for matching personal_code
+    // Query users table for matching personal_code (case-insensitive)
+    const inputCode = typeof personal_code === 'string' ? personal_code.trim() : ''
     const { data: user, error } = await supabase
       .from('users')
       .select('id, email, personal_code, is_admin')
-      .eq('personal_code', personal_code.trim())
+      // ilike is case-insensitive; we pass no wildcards so it's effectively an exact match.
+      .ilike('personal_code', inputCode)
       .maybeSingle()
 
     // maybeSingle: no row = null data, no error; .single() would return PGRST116 for 0 rows

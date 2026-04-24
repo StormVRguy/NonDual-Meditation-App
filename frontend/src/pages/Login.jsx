@@ -15,7 +15,7 @@ function Login({ onLoginSuccess }) {
 
     try {
       const response = await callEdgeFunction('auth-login', {
-        body: JSON.stringify({ personal_code: personalCode }),
+        body: JSON.stringify({ personal_code: personalCode.trim() }),
         headers: {
           'Content-Type': 'application/json',
         },
