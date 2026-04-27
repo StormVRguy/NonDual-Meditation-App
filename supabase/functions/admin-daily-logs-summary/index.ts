@@ -147,7 +147,7 @@ serve(async (req) => {
     // This keeps schema simple (no extra SQL functions/views) and is fine for modest dataset sizes.
     const { data: logs, error: logsError } = await supabase
       .from('daily_logs')
-      .select('personal_code, date, meditation_finished, questionnaire_started, lecture_watched, logged_in_site')
+      .select('personal_code, date, meditation_finished, questionnaire_started, lecture_watched')
 
     if (logsError) {
       console.error('Database query error (daily_logs):', logsError)
@@ -191,16 +191,14 @@ serve(async (req) => {
         row.lectures_watched += 1
       }
 
-      if ((log as any)?.logged_in_site === true) {
-        const date = (log as any)?.date
-        if (typeof date === 'string' && date.length > 0) {
-          let dates = loggedDaysByCode.get(code)
-          if (!dates) {
-            dates = new Set<string>()
-            loggedDaysByCode.set(code, dates)
-          }
-          dates.add(date)
+      const date = (log as any)?.date
+      if (typeof date === 'string' && date.length > 0) {
+        let dates = loggedDaysByCode.get(code)
+        if (!dates) {
+          dates = new Set<string>()
+          loggedDaysByCode.set(code, dates)
         }
+        dates.add(date)
       }
     }
 

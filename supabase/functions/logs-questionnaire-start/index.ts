@@ -147,6 +147,7 @@ serve(async (req) => {
         user_id: userId,
         date: today,
         ...(personalCode ? { personal_code: personalCode } : {}),
+        logged_in_site: true,
         questionnaire_started: true,
         questionnaire_started_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),

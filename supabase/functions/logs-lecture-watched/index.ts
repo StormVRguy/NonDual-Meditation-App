@@ -108,6 +108,7 @@ serve(async (req) => {
         user_id: userId,
         date: today,
         ...(personalCode ? { personal_code: personalCode } : {}),
+        logged_in_site: true,
         lecture_watched: true,
         updated_at: new Date().toISOString(),
       }, {

@@ -90,6 +90,7 @@ serve(async (req) => {
         user_id: userId,
         date: today,
         ...(personalCode ? { personal_code: personalCode } : {}),
+        logged_in_site: true,
         meditation_finished: true,
         updated_at: new Date().toISOString(),
       }, {
