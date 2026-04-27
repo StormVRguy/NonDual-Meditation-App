@@ -26,7 +26,7 @@ function decodeJWT(token: string): any {
   }
 }
 
-function getTodayDate(timezone: string = 'America/New_York'): string {
+function getTodayDate(timezone: string = 'Europe/Rome'): string {
   const now = new Date()
   const formatter = new Intl.DateTimeFormat('en-US', {
     timeZone: timezone,
@@ -46,6 +46,8 @@ type SummaryRow = {
   group: string
   meditation_days: number
   questionnaires: number
+  lectures_watched: number
+  logged_days: number
   meditation_today: boolean
 }
 
@@ -117,7 +119,7 @@ serve(async (req) => {
       })
     }
 
-    const appTimezone = Deno.env.get('APP_TIMEZONE') || 'America/New_York'
+    const appTimezone = Deno.env.get('APP_TIMEZONE') || 'Europe/Rome'
     const today = getTodayDate(appTimezone)
 
     // Fetch all non-admin users to get their group (join in-memory with daily_logs)
@@ -145,7 +147,7 @@ serve(async (req) => {
     // This keeps schema simple (no extra SQL functions/views) and is fine for modest dataset sizes.
     const { data: logs, error: logsError } = await supabase
       .from('daily_logs')
-      .select('personal_code, date, meditation_finished, questionnaire_started')
+      .select('personal_code, date, meditation_finished, questionnaire_started, lecture_watched, logged_in_site')
 
     if (logsError) {
       console.error('Database query error (daily_logs):', logsError)
@@ -156,6 +158,7 @@ serve(async (req) => {
     }
 
     const byCode = new Map<string, SummaryRow>()
+    const loggedDaysByCode = new Map<string, Set<string>>()
 
     for (const log of logs ?? []) {
       const code = (log as any)?.personal_code
@@ -168,6 +171,8 @@ serve(async (req) => {
           group: groupByCode.get(code) ?? '',
           meditation_days: 0,
           questionnaires: 0,
+          lectures_watched: 0,
+          logged_days: 0,
           meditation_today: false,
         }
         byCode.set(code, row)
@@ -181,6 +186,26 @@ serve(async (req) => {
       if ((log as any)?.questionnaire_started === true) {
         row.questionnaires += 1
       }
+
+      if ((log as any)?.lecture_watched === true) {
+        row.lectures_watched += 1
+      }
+
+      if ((log as any)?.logged_in_site === true) {
+        const date = (log as any)?.date
+        if (typeof date === 'string' && date.length > 0) {
+          let dates = loggedDaysByCode.get(code)
+          if (!dates) {
+            dates = new Set<string>()
+            loggedDaysByCode.set(code, dates)
+          }
+          dates.add(date)
+        }
+      }
+    }
+
+    for (const [code, row] of byCode.entries()) {
+      row.logged_days = loggedDaysByCode.get(code)?.size ?? 0
     }
 
     const rows = Array.from(byCode.values()).sort((a, b) =>

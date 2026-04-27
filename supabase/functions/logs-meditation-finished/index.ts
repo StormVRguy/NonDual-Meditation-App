@@ -27,7 +27,7 @@ function decodeJWT(token: string): any {
   }
 }
 
-function getTodayDate(timezone: string = 'America/New_York'): string {
+function getTodayDate(timezone: string = 'Europe/Rome'): string {
   const now = new Date()
   const formatter = new Intl.DateTimeFormat('en-US', {
     timeZone: timezone,
@@ -81,7 +81,7 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
     const personalCode = await resolvePersonalCodeForDailyLog(supabase, userId, payload)
-    const appTimezone = Deno.env.get('APP_TIMEZONE') || 'America/New_York'
+    const appTimezone = Deno.env.get('APP_TIMEZONE') || 'Europe/Rome'
     const today = getTodayDate(appTimezone)
 
     const { data, error } = await supabase

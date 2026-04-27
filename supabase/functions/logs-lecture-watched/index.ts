@@ -35,7 +35,7 @@ function decodeJWT(token: string): any {
 }
 
 // Get today's date in the app timezone
-function getTodayDate(timezone: string = 'America/New_York'): string {
+function getTodayDate(timezone: string = 'Europe/Rome'): string {
   const now = new Date()
   const formatter = new Intl.DateTimeFormat('en-US', {
     timeZone: timezone,
@@ -98,7 +98,7 @@ serve(async (req) => {
     const personalCode = await resolvePersonalCodeForDailyLog(supabase, userId, payload)
 
     // Get today's date in app timezone
-    const appTimezone = Deno.env.get('APP_TIMEZONE') || 'America/New_York'
+    const appTimezone = Deno.env.get('APP_TIMEZONE') || 'Europe/Rome'
     const today = getTodayDate(appTimezone)
 
     // Upsert daily_logs entry with lecture_watched = true

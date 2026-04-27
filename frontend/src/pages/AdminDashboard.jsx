@@ -251,6 +251,8 @@ function AdminDashboard({ onLogout }) {
                     <th>Codice personale</th>
                     <th>Gruppo</th>
                     <th>Meditazioni completate</th>
+                    <th>Lezioni guardate</th>
+                    <th>Giorni di login</th>
                     <th>Questionari aperti</th>
                     <th>Meditazione oggi</th>
                   </tr>
@@ -261,6 +263,8 @@ function AdminDashboard({ onLogout }) {
                       <td className="admin-code-cell">{r.personal_code}</td>
                       <td className="admin-group-cell">{r.group || '—'}</td>
                       <td>{Number.isFinite(r.meditation_days) ? r.meditation_days : 0}</td>
+                      <td>{Number.isFinite(r.lectures_watched) ? r.lectures_watched : 0}</td>
+                      <td>{Number.isFinite(r.logged_days) ? r.logged_days : 0}</td>
                       <td>{Number.isFinite(r.questionnaires) ? r.questionnaires : 0}</td>
                       <td>
                         <span
@@ -277,7 +281,7 @@ function AdminDashboard({ onLogout }) {
                   ))}
                   {rows.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="admin-empty">
+                      <td colSpan={7} className="admin-empty">
                         Nessun dato disponibile.
                       </td>
                     </tr>
