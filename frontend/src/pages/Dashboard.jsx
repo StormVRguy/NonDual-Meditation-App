@@ -198,6 +198,8 @@ function Dashboard({ onLogout }) {
         ) : (
           <>
             <div className="daily-practices">
+              <h3>I file delle meditazioni e delle lezioni sono disponibili il giorno dopo la sessione in presenza</h3>
+              <h3 style={{ color: 'red' }}>In caso di mancata partecipazione in presenza, si è pregati di recuperare la lezione (guardandola interamente) entro il giorno successivo.</h3>
               <h2>PRATICHE QUOTIDIANE</h2>
               <ul className="daily-practices-list">
                 <li>
