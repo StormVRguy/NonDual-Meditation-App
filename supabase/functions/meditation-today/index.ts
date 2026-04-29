@@ -71,6 +71,18 @@ async function latestFromStorage(
   return { file_url: url, path }
 }
 
+async function latestAdditionalMeditationFromStorage(
+  // deno-lint-ignore no-explicit-any
+  supabase: any,
+  userGroup: string,
+): Promise<{ file_url: string; path: string } | null> {
+  if (!userGroup) return null
+
+  // Convention requested by product: bucket "additional meditations"
+  // with folders named by experimental group.
+  return latestFromStorage(supabase, 'additional meditations', userGroup)
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -115,10 +127,14 @@ serve(async (req) => {
     if (error) {
       if (error.code === 'PGRST116') {
         const fallback = await latestFromStorage(supabase, 'meditations', userGroup)
+        const additional = await latestAdditionalMeditationFromStorage(supabase, userGroup)
         return new Response(
           JSON.stringify({
             meditation: fallback
               ? { id: null, date: null, file_url: fallback.file_url }
+              : null,
+            additional_meditation: additional
+              ? { file_url: additional.file_url }
               : null,
             message: fallback ? null : 'No meditation available',
           }),
@@ -150,10 +166,17 @@ serve(async (req) => {
 
     if (!fileUrl) {
       return new Response(
-        JSON.stringify({ meditation: null, message: 'No meditation available' }),
+        JSON.stringify({
+          meditation: null,
+          additional_meditation: await latestAdditionalMeditationFromStorage(supabase, userGroup)
+            .then((additional) => (additional ? { file_url: additional.file_url } : null)),
+          message: 'No meditation available',
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       )
     }
+
+    const additionalMeditation = await latestAdditionalMeditationFromStorage(supabase, userGroup)
 
     return new Response(
       JSON.stringify({
@@ -162,6 +185,9 @@ serve(async (req) => {
           date: meditationFile?.date ?? null,
           file_url: fileUrl,
         },
+        additional_meditation: additionalMeditation
+          ? { file_url: additionalMeditation.file_url }
+          : null,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )

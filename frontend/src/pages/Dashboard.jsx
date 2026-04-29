@@ -24,6 +24,7 @@ function formatRomeDateTime(iso) {
 function Dashboard({ onLogout }) {
   const user = getUser()
   const [meditation, setMeditation] = useState(null)
+  const [additionalMeditation, setAdditionalMeditation] = useState(null)
   const [lecture, setLecture] = useState(null)
   const [loading, setLoading] = useState(true)
   const [lectureLoading, setLectureLoading] = useState(true)
@@ -80,6 +81,7 @@ function Dashboard({ onLogout }) {
       } else {
         setMeditation(null)
       }
+      setAdditionalMeditation(response.additional_meditation ?? null)
     } catch (err) {
       console.error('Failed to fetch meditation:', err)
       setError(err.message || 'Impossibile caricare la meditazione di oggi')
@@ -226,6 +228,16 @@ function Dashboard({ onLogout }) {
                   {meditationPlayed && (
                     <p className="success-message">✓ Sessione di meditazione avviata</p>
                   )}
+                  {additionalMeditation?.file_url ? (
+                    <>
+                      <h3>Body scan - da fare massimo due volte entro la prossima sessione in presenza</h3>
+                      <AudioPlayer
+                        audioUrl={additionalMeditation.file_url}
+                        onPlayStart={handleMeditationPlayStart}
+                        onMostlyPlayed={handleMeditationMostlyPlayed}
+                      />
+                    </>
+                  ) : null}
                 </>
               ) : (
                 <div className="no-meditation">
