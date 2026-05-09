@@ -40,21 +40,34 @@ function base64UrlDecode(str) {
 }
 
 /**
+ * Decode JWT payload without verifying signature.
+ * Used for client-side UX fallbacks only.
+ */
+export function getTokenPayload() {
+  const token = getToken()
+  if (!token) return null
+  try {
+    const parts = token.split('.')
+    if (parts.length !== 3) return null
+    return JSON.parse(base64UrlDecode(parts[1]))
+  } catch {
+    return null
+  }
+}
+
+/**
  * Check if user is authenticated
  */
 export function isAuthenticated() {
-  const token = getToken()
-  if (!token) return false
+  if (!getToken()) return false
 
   try {
     // Decode JWT to check expiration (simple check, Edge Function validates)
-    const parts = token.split('.')
-    if (parts.length !== 3) {
+    const payload = getTokenPayload()
+    if (!payload) {
       clearAuth()
       return false
     }
-    
-    const payload = JSON.parse(base64UrlDecode(parts[1]))
     const now = Math.floor(Date.now() / 1000)
     
     if (payload.exp && payload.exp < now) {
@@ -66,6 +79,7 @@ export function isAuthenticated() {
     return true
   } catch (error) {
     console.error('JWT validation error:', error)
+    const token = getToken()
     console.error('Token parts:', token ? token.split('.').map((p, i) => `Part ${i}: ${p.substring(0, 20)}...`) : 'No token')
     // Invalid token format
     clearAuth()

@@ -1,5 +1,5 @@
 // Edge Function: user-me
-// Returns the current user's minimal profile (server-truth), including is_admin.
+// Returns the current user's minimal profile (server-truth), including is_admin and group.
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -69,7 +69,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
     const { data: user, error } = await supabase
       .from('users')
-      .select('id, personal_code, is_admin')
+      .select('id, personal_code, is_admin, "group"')
       .eq('id', userId)
       .maybeSingle()
 
@@ -94,6 +94,7 @@ serve(async (req) => {
           id: user.id,
           personal_code: user.personal_code,
           is_admin: user.is_admin === true,
+          group: user.group ?? '',
         },
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }

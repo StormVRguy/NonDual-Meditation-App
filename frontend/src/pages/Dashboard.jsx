@@ -21,7 +21,34 @@ function formatRomeDateTime(iso) {
   }).format(d)
 }
 
-function Dashboard({ onLogout }) {
+function DefaultIntroContent() {
+  return (
+    <div className="daily-practices">
+      <h3>I file delle meditazioni e delle lezioni sono disponibili il giorno dopo la sessione in presenza</h3>
+      <h3 style={{ color: 'red' }}>In caso di mancata partecipazione in presenza, si è pregati di recuperare la lezione (guardandola interamente) entro il giorno successivo.</h3>
+      <h2>PRATICHE QUOTIDIANE</h2>
+      <ul className="daily-practices-list">
+        <li>
+          <strong>MEDITAZIONE FORMALE</strong>: Ogni giorno, praticare la meditazione seduta sul respiro, seguendo la traccia audio. Talvolta (massimo due volte) è possibile sostituirla con la meditazione distesa del body-scan, seguendo la traccia audio.
+        </li>
+        <li>
+          <strong>MEDITAZIONE INFORMALE</strong>: Durante la giornata, concedersi qualche momento di consapevolezza - 2 o 3 minuti, anche piu volte - per lasciare andare ogni pensiero e attivita, e prendere consapevolezza di corpo, respiro, stato d’animo e ambiente circostante. E importante concentrarsi sull’atteggiamento di ascolto, cura e disponibilita verso la propria condizione (interna ed esterna). Si suggerisce anche di usare il respiro come asse attorno al quale «radunare la consapevolezza», dando cosi continuita alla pratica formale.
+        </li>
+        <li>
+          <strong>TASK CONTEMPLATIVO</strong>: Prova a interrogarti sulla natura dei fenomeni dischiusi dalla percezione, come suoni e colori: dove hanno luogo veramente? Prova a porti seriamente questa domanda, esplorandone le possibili risposte e le relative implicazioni. Non limitarti a una riflessione intellettuale: scopri se questo genere di indagine ha un impatto sul modo in cui concepisci la realta che ti circonda.
+        </li>
+      </ul>
+    </div>
+  )
+}
+
+function Dashboard({
+  onLogout,
+  pageTitle = 'Dashboard del Corso di Meditazione Non Duale',
+  introContent = null,
+  additionalContent = null,
+  showBodyScanMeditation = true,
+}) {
   const user = getUser()
   const [meditation, setMeditation] = useState(null)
   const [additionalMeditation, setAdditionalMeditation] = useState(null)
@@ -175,7 +202,7 @@ function Dashboard({ onLogout }) {
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
-        <h1>Dashboard del Corso di Meditazione Non Duale</h1>
+        <h1>{pageTitle}</h1>
         <div className="user-info">
           <span>Codice: {user?.personal_code ?? '—'}</span>
           <button onClick={handleLogout} className="logout-button">
@@ -199,22 +226,8 @@ function Dashboard({ onLogout }) {
           </div>
         ) : (
           <>
-            <div className="daily-practices">
-              <h3>I file delle meditazioni e delle lezioni sono disponibili il giorno dopo la sessione in presenza</h3>
-              <h3 style={{ color: 'red' }}>In caso di mancata partecipazione in presenza, si è pregati di recuperare la lezione (guardandola interamente) entro il giorno successivo.</h3>
-              <h2>PRATICHE QUOTIDIANE</h2>
-              <ul className="daily-practices-list">
-                <li>
-                  <strong>MEDITAZIONE FORMALE</strong>: Ogni giorno, praticare la meditazione seduta sul respiro, seguendo la traccia audio. Talvolta (massimo due volte) è possibile sostituirla con la meditazione distesa del body-scan, seguendo la traccia audio.
-                </li>
-                <li>
-                  <strong>MEDITAZIONE INFORMALE</strong>: Durante la giornata, concedersi qualche momento di consapevolezza – 2 o 3 minuti, anche più volte – per lasciare andare ogni pensiero e attività, e prendere consapevolezza di corpo, respiro, stato d’animo e ambiente circostante. È importante concentrarsi sull’atteggiamento di ascolto, cura e disponibilità verso la propria condizione (interna ed esterna). Si suggerisce anche di usare il respiro come asse attorno al quale «radunare la consapevolezza», dando così continuità alla pratica formale.
-                </li>
-                <li>
-                  <strong>TASK CONTEMPLATIVO</strong>: Prova a interrogarti sulla natura dei fenomeni dischiusi dalla percezione, come suoni e colori: dove hanno luogo veramente? Prova a porti seriamente questa domanda, esplorandone le possibili risposte e le relative implicazioni. Non limitarti a una riflessione intellettuale: scopri se questo genere di indagine ha un impatto sul modo in cui concepisci la realtà che ti circonda.
-                </li>
-              </ul>
-            </div>
+            {introContent ?? <DefaultIntroContent />}
+            {additionalContent}
 
             <div className="meditation-section">
               <h2>Meditazione di oggi</h2>
@@ -228,7 +241,7 @@ function Dashboard({ onLogout }) {
                   {meditationPlayed && (
                     <p className="success-message">✓ Sessione di meditazione avviata</p>
                   )}
-                  {additionalMeditation?.file_url ? (
+                  {showBodyScanMeditation && additionalMeditation?.file_url ? (
                     <>
                       <h3>Body scan - da fare massimo due volte entro la prossima sessione in presenza</h3>
                       <AudioPlayer

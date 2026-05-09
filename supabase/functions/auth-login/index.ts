@@ -129,7 +129,7 @@ serve(async (req) => {
     const inputCode = typeof personal_code === 'string' ? personal_code.trim() : ''
     const { data: user, error } = await supabase
       .from('users')
-      .select('id, email, personal_code, is_admin')
+      .select('id, email, personal_code, is_admin, "group"')
       // ilike is case-insensitive; we pass no wildcards so it's effectively an exact match.
       .ilike('personal_code', inputCode)
       .maybeSingle()
@@ -159,6 +159,7 @@ serve(async (req) => {
       email: user.email,
       personal_code: user.personal_code,
       is_admin: user.is_admin === true,
+      group: user.group ?? '',
       exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60), // 7 days expiration
       iat: Math.floor(Date.now() / 1000),
     }
@@ -217,6 +218,7 @@ serve(async (req) => {
         email: user.email,
         personal_code: user.personal_code,
         is_admin: user.is_admin === true,
+        group: user.group ?? '',
       }
     }
     

@@ -1,19 +1,28 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import Login from './pages/Login'
-import Dashboard from './pages/Dashboard'
 import AdminDashboard from './pages/AdminDashboard'
 import QuestionnaireComplete from './pages/QuestionnaireComplete'
 import SiteFooter from './components/SiteFooter'
 import { getToken, isAuthenticated } from './utils/auth'
 import { callEdgeFunctionWithUser } from './api/client'
+import { resolveDashboardVariant } from './config/dashboardGroups'
+import { getDashboardComponent } from './config/dashboardRegistry'
 import './App.css'
+
+function normalizeGroup(value) {
+  return typeof value === 'string' ? value.trim() : ''
+}
 
 function App() {
   const [authenticated, setAuthenticated] = useState(false)
   const [loading, setLoading] = useState(true)
   const [admin, setAdmin] = useState(false)
+  const [userGroup, setUserGroup] = useState('')
+  const [groupResolutionError, setGroupResolutionError] = useState('')
   const [roleLoading, setRoleLoading] = useState(false)
+  const dashboardVariant = resolveDashboardVariant(userGroup)
+  const UserDashboard = getDashboardComponent(dashboardVariant)
 
   useEffect(() => {
     const checkAuth = () => {
@@ -32,6 +41,8 @@ function App() {
     async function fetchRole() {
       if (!authenticated) {
         setAdmin(false)
+        setUserGroup('')
+        setGroupResolutionError('')
         setRoleLoading(false)
         return
       }
@@ -39,6 +50,8 @@ function App() {
       const token = getToken()
       if (!token) {
         setAdmin(false)
+        setUserGroup('')
+        setGroupResolutionError('')
         setRoleLoading(false)
         return
       }
@@ -47,10 +60,26 @@ function App() {
         setRoleLoading(true)
         const res = await callEdgeFunctionWithUser('user-me', token)
         const isAdminFromDb = res?.user?.is_admin === true
-        if (!cancelled) setAdmin(isAdminFromDb)
+        const groupFromDb = normalizeGroup(res?.user?.group)
+        const mappedVariant = resolveDashboardVariant(groupFromDb)
+        if (!cancelled) {
+          setAdmin(isAdminFromDb)
+          setUserGroup(groupFromDb)
+          if (!isAdminFromDb && !groupFromDb) {
+            setGroupResolutionError('Impossibile determinare il gruppo utente dal profilo. Contatta il responsabile del sito.')
+          } else if (!isAdminFromDb && !mappedVariant) {
+            setGroupResolutionError('Gruppo utente non configurato per una dashboard dedicata. Contatta il responsabile del sito.')
+          } else {
+            setGroupResolutionError('')
+          }
+        }
       } catch (e) {
         console.error('Failed to fetch user role:', e)
-        if (!cancelled) setAdmin(false)
+        if (!cancelled) {
+          setAdmin(false)
+          setUserGroup('')
+          setGroupResolutionError('Impossibile caricare il profilo utente. Effettua di nuovo l’accesso o contatta il responsabile del sito.')
+        }
       } finally {
         if (!cancelled) setRoleLoading(false)
       }
@@ -87,8 +116,16 @@ function App() {
                       </div>
                     ) : admin ? (
                       <AdminDashboard onLogout={handleLogout} />
+                    ) : groupResolutionError ? (
+                      <div className="app-loading" role="alert">
+                        <p>{groupResolutionError}</p>
+                      </div>
+                    ) : !UserDashboard ? (
+                      <div className="app-loading" role="alert">
+                        <p>Gruppo utente non configurato per una dashboard dedicata. Contatta il responsabile del sito.</p>
+                      </div>
                     ) : (
-                      <Dashboard onLogout={handleLogout} />
+                      <UserDashboard onLogout={handleLogout} />
                     )
                   ) : (
                     <Login onLoginSuccess={handleLoginSuccess} />
