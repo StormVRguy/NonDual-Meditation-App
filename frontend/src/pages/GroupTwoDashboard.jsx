@@ -24,6 +24,7 @@ function GroupTwoDashboard({ onLogout }) {
       onLogout={onLogout}
       pageTitle="Dashboard del Corso di Meditazione Non Duale"
       introContent={<GroupTwoIntro />}
+      questionnaireSurveyUrl={import.meta.env.VITE_QUALTRICS_SURVEY_URL_2}
     />
   )
 }

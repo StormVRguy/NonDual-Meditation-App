@@ -164,6 +164,22 @@
   transform: none;
 }
 
+.questionnaire-url-wrap {
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  line-height: 1.4;
+  word-break: break-all;
+}
+
+.questionnaire-url-link {
+  color: #5a67d8;
+  text-decoration: underline;
+}
+
+.questionnaire-url-link:hover {
+  color: #434190;
+}
+
 .questionnaire-locked {
   color: #e67e22;
   font-weight: 500;

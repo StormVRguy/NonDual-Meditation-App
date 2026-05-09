@@ -21,6 +21,22 @@ function formatRomeDateTime(iso) {
   }).format(d)
 }
 
+/** Full survey URL including Q_PopulateResponse when configured (same as opening from the dashboard). */
+function buildQuestionnaireUrl(questionnaireSurveyUrl, user) {
+  let qualtricsUrl = questionnaireSurveyUrl || import.meta.env.VITE_QUALTRICS_SURVEY_URL
+  if (!qualtricsUrl) return null
+  const personalCode = user?.personal_code
+  const codiceQid = import.meta.env.VITE_QUALTRICS_CODICE_QID
+  if (personalCode && codiceQid) {
+    const [base, hash] = qualtricsUrl.split('#')
+    const separator = base.includes('?') ? '&' : '?'
+    const populateJson = JSON.stringify({ [codiceQid]: personalCode })
+    const withQuery = `${base}${separator}Q_PopulateResponse=${encodeURIComponent(populateJson)}`
+    qualtricsUrl = hash != null ? `${withQuery}#${hash}` : withQuery
+  }
+  return qualtricsUrl
+}
+
 function DefaultIntroContent() {
   return (
     <div className="daily-practices">
@@ -48,6 +64,7 @@ function Dashboard({
   introContent = null,
   additionalContent = null,
   showBodyScanMeditation = true,
+  questionnaireSurveyUrl = null,
 }) {
   const user = getUser()
   const [meditation, setMeditation] = useState(null)
@@ -71,6 +88,7 @@ function Dashboard({
   // Button should stay clickable for the whole active window (as long as meditation is enough),
   // even if the user already opened it in this window.
   const questionnaireClickable = isWithinWindow && isMeditationEnough
+  const questionnaireHref = buildQuestionnaireUrl(questionnaireSurveyUrl, user)
 
   useEffect(() => {
     fetchTodayMeditation()
@@ -153,27 +171,20 @@ function Dashboard({
 
   const handleQuestionnaireClick = async () => {
     if (!questionnaireClickable) return
-    let qualtricsUrl = import.meta.env.VITE_QUALTRICS_SURVEY_URL
+    const qualtricsUrl = buildQuestionnaireUrl(questionnaireSurveyUrl, user)
     if (!qualtricsUrl) {
       alert('URL del questionario non configurata')
       return
     }
-    // Append Q_PopulateResponse to pre-fill the Codice question (see PHASE4_QUALTRICS.md)
-    // Qualtrics requires the Question ID (e.g. QID1, QID2), NOT the export code "Codice".
-    const personalCode = user?.personal_code
-    const codiceQid = import.meta.env.VITE_QUALTRICS_CODICE_QID
-    if (personalCode && codiceQid) {
-      const [base, hash] = qualtricsUrl.split('#')
-      const separator = base.includes('?') ? '&' : '?'
-      const populateJson = JSON.stringify({ [codiceQid]: personalCode })
-      const withQuery = `${base}${separator}Q_PopulateResponse=${encodeURIComponent(populateJson)}`
-      qualtricsUrl = hash != null ? `${withQuery}#${hash}` : withQuery
-      if (import.meta.env.DEV) {
+    if (import.meta.env.DEV) {
+      const personalCode = user?.personal_code
+      const codiceQid = import.meta.env.VITE_QUALTRICS_CODICE_QID
+      if (personalCode && codiceQid) {
         console.log('[Questionnaire] Pre-fill URL param added. QID:', codiceQid, '| Full URL (check in new tab):', qualtricsUrl)
+      } else {
+        if (!personalCode) console.warn('[Questionnaire] No personal_code on user – re-login may be needed. Not adding Q_PopulateResponse.')
+        if (!codiceQid) console.warn('[Questionnaire] VITE_QUALTRICS_CODICE_QID not set. Set it to the question’s QID (e.g. QID5), not the export code "Codice".')
       }
-    } else if (import.meta.env.DEV) {
-      if (!personalCode) console.warn('[Questionnaire] No personal_code on user – re-login may be needed. Not adding Q_PopulateResponse.')
-      if (!codiceQid) console.warn('[Questionnaire] VITE_QUALTRICS_CODICE_QID not set. Set it to the question’s QID (e.g. QID5), not the export code "Codice".')
     }
     // If already opened in this active window, allow reopening without logging again
     // (server enforces 1 open per window).
@@ -308,6 +319,27 @@ function Dashboard({
               >
                 Compila questionario
               </button>
+              {questionnaireHref && isWithinWindow ? (
+                <p className="questionnaire-url-wrap">
+                  <a
+                    href={questionnaireHref}
+                    className="questionnaire-url-link"
+                    {...(questionnaireClickable
+                      ? {
+                          onClick: (e) => {
+                            e.preventDefault()
+                            void handleQuestionnaireClick()
+                          },
+                        }
+                      : {
+                          target: '_blank',
+                          rel: 'noopener noreferrer',
+                        })}
+                  >
+                    {questionnaireHref}
+                  </a>
+                </p>
+              ) : null}
               {!questionnaireClickable ? (
                 <p className="section-description questionnaire-locked">
                   {!isWithinWindow ? (
