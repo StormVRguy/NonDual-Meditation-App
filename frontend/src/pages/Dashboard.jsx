@@ -212,10 +212,6 @@ function Dashboard({
     if (onLogout) onLogout()
   }
 
-  const hasMainMeditation = Boolean(meditation?.file_url)
-  const hasAdditionalMeditation = Boolean(showBodyScanMeditation && additionalMeditation?.file_url)
-  const hasAnyMeditationAudio = hasMainMeditation || hasAdditionalMeditation
-
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
@@ -250,8 +246,8 @@ function Dashboard({
               <h2>Meditazione di oggi</h2>
               {meditation ? (
                 <>
-                  <AudioPlayer 
-                    audioUrl={meditation.file_url} 
+                  <AudioPlayer
+                    audioUrl={meditation.file_url}
                     onPlayStart={handleMeditationPlayStart}
                     onMostlyPlayed={handleMeditationMostlyPlayed}
                   />
