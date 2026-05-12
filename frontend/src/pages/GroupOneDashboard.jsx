@@ -8,13 +8,13 @@ function GroupOneIntro() {
       <h2>PRATICHE QUOTIDIANE</h2>
       <ul className="daily-practices-list">
         <li>
-          <strong>PRATICA FORMALE</strong>: Ogni giorno, praticare la meditazione seduta seguendo la traccia audio.
+          <strong>PRATICA FORMALE</strong>: Ogni giorno, praticare la meditazione sulla sfera mentale con la traccia audio.
         </li>
         <li>
-          <strong>PRATICA INFORMALE</strong>: Durante la giornata, concedersi qualche momento di consapevolezza - 2 o 3 minuti, anche piu volte - per lasciare andare ogni attivita, e prendere consapevolezza delle varie dimensioni (tattile, olfattiva, etc.) che costituiscono la propria esperienza in quel frangente.
+          <strong>PRATICA INFORMALE</strong>: Durante la giornata, notare se qualche volta capita di essere fortemente immedesimate/i in uno stato mentale (emozione, giudizio, convinzione, bisogno etc.) ma poi, dopo qualche minuto, senza particolari ragioni esterne, quello stato appare lontano o poco rilevante. Notare che cosa cambia quando ci si disidentifica da quello stato.
         </li>
         <li>
-          <strong>TASK CONTEMPLATIVO</strong>: Prova a interrogarti sulla dimensione mentale/interiore: quali forme puo assumere (es. pensiero discorsivo, immagini mentali, etc.)? Puo essere utile prendere qualche appunto per annotare quelle che noti grazie alle sessioni di meditazione e quelle che scorgi nel corso della giornata.
+          <strong>TASK CONTEMPLATIVO</strong>: Esplora lo spazio della mente entro il quale sorgono e si dissolvono i vari contenuti mentali: ha delle qualita che lo caratterizzano? Se si, prova a descriverle.
         </li>
       </ul>
     </div>
@@ -26,7 +26,7 @@ function GroupOneExtras() {
     <div className="daily-practices">
       <h2>Approfondimento</h2>
       <p className="section-description">
-        Chi desiderasse ascoltare la traccia audio riprodotta durante l'ultimo incontro, ecco il link:{' '}
+        Chi desiderasse ascoltare la traccia audio riprodotta durante il terzo incontro, ecco il link:{' '}
         <a href="https://youtu.be/lvsrolNmfxY?is=-xODi5Q6PBpNlVWd" target="_blank" rel="noreferrer">
           https://youtu.be/lvsrolNmfxY?is=-xODi5Q6PBpNlVWd
         </a>

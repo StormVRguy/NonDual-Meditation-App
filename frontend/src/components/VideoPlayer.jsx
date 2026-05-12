@@ -9,7 +9,7 @@ const WATCHED_THRESHOLD = 50
 // Max delta we consider "natural" play (seconds). Larger = seek, don't count.
 const MAX_NATURAL_DELTA = 1.5
 
-function VideoPlayer({ videoUrl, onWatched }) {
+function VideoPlayer({ videoUrl, onWatched, logWatchEvent = true, showWatchedMessage = true }) {
   const videoRef = useRef(null)
   const watchedFired = useRef(false)
   const totalSecondsPlayedRef = useRef(0)
@@ -75,15 +75,17 @@ function VideoPlayer({ videoUrl, onWatched }) {
     const required = (dur * WATCHED_THRESHOLD) / 100
     if (total >= required && !watchedFired.current) {
       watchedFired.current = true
-      const token = getToken()
-      if (token) {
-        callEdgeFunctionWithUser('logs-lecture-watched', token).catch((err) =>
-          console.error('Failed to log lecture watched:', err)
-        )
+      if (logWatchEvent) {
+        const token = getToken()
+        if (token) {
+          callEdgeFunctionWithUser('logs-lecture-watched', token).catch((err) =>
+            console.error('Failed to log lecture watched:', err)
+          )
+        }
       }
       if (onWatched) onWatched()
     }
-  }, [duration, secondsPlayed, onWatched])
+  }, [duration, secondsPlayed, onWatched, logWatchEvent])
 
   const handlePlay = async () => {
     const video = videoRef.current
@@ -169,7 +171,7 @@ function VideoPlayer({ videoUrl, onWatched }) {
           </div>
         </div>
       </div>
-      {watchedFired.current && (
+      {showWatchedMessage && watchedFired.current && (
         <p className="success-message">✓ Lezione video guardata (50%+)</p>
       )}
     </div>

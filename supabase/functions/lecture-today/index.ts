@@ -68,6 +68,15 @@ async function latestFromStorage(
   return { file_url: url, path }
 }
 
+async function latestAdditionalLectureFromStorage(
+  // deno-lint-ignore no-explicit-any
+  supabase: any,
+  userGroup: string,
+): Promise<{ file_url: string; path: string } | null> {
+  if (!userGroup) return null
+  return latestFromStorage(supabase, 'additional lectures', userGroup)
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -112,9 +121,11 @@ serve(async (req) => {
     if (error) {
       if (error.code === 'PGRST116') {
         const fallback = await latestFromStorage(supabase, 'lectures', userGroup)
+        const additionalLecture = await latestAdditionalLectureFromStorage(supabase, userGroup)
         return new Response(
           JSON.stringify({
             lecture: fallback ? { id: null, date: null, file_url: fallback.file_url } : null,
+            additional_lecture: additionalLecture ? { file_url: additionalLecture.file_url } : null,
             message: fallback ? null : 'No lecture available',
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
@@ -144,11 +155,18 @@ serve(async (req) => {
     }
 
     if (!fileUrl) {
+      const additionalLecture = await latestAdditionalLectureFromStorage(supabase, userGroup)
       return new Response(
-        JSON.stringify({ lecture: null, message: 'No lecture available' }),
+        JSON.stringify({
+          lecture: null,
+          additional_lecture: additionalLecture ? { file_url: additionalLecture.file_url } : null,
+          message: 'No lecture available',
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       )
     }
+
+    const additionalLecture = await latestAdditionalLectureFromStorage(supabase, userGroup)
 
     return new Response(
       JSON.stringify({
@@ -157,6 +175,7 @@ serve(async (req) => {
           date: lectureFile?.date ?? null,
           file_url: fileUrl,
         },
+        additional_lecture: additionalLecture ? { file_url: additionalLecture.file_url } : null,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )

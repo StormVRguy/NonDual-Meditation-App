@@ -70,6 +70,7 @@ function Dashboard({
   const [meditation, setMeditation] = useState(null)
   const [additionalMeditation, setAdditionalMeditation] = useState(null)
   const [lecture, setLecture] = useState(null)
+  const [additionalLecture, setAdditionalLecture] = useState(null)
   const [loading, setLoading] = useState(true)
   const [lectureLoading, setLectureLoading] = useState(true)
   const [error, setError] = useState('')
@@ -157,6 +158,7 @@ function Dashboard({
       } else {
         setLecture(null)
       }
+      setAdditionalLecture(response.additional_lecture ?? null)
     } catch (err) {
       console.error('Failed to fetch lecture:', err)
       setLectureError(err.message || 'Impossibile caricare il video della lezione')
@@ -209,6 +211,10 @@ function Dashboard({
     clearAuth()
     if (onLogout) onLogout()
   }
+
+  const hasMainMeditation = Boolean(meditation?.file_url)
+  const hasAdditionalMeditation = Boolean(showBodyScanMeditation && additionalMeditation?.file_url)
+  const hasAnyMeditationAudio = hasMainMeditation || hasAdditionalMeditation
 
   return (
     <div className="dashboard-container">
@@ -302,6 +308,17 @@ function Dashboard({
                 </div>
               )}
             </div>
+
+            {additionalLecture?.file_url ? (
+              <div className="lecture-section">
+                <h2>Discussione finale e spiegazione del task contemplativo</h2>
+                <VideoPlayer
+                  videoUrl={additionalLecture.file_url}
+                  logWatchEvent={false}
+                  showWatchedMessage={false}
+                />
+              </div>
+            ) : null}
 
             <div className="questionnaire-section">
               <h2>Questionario giornaliero</h2>
