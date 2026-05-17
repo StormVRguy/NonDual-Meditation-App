@@ -174,3 +174,5 @@ ON CONFLICT (email) DO NOTHING;
 Once authentication is working:
 - Proceed to **Phase 3**: Dashboard and meditation player
 - The authentication system is now ready to protect routes and identify users
+
+#Test, ignore
