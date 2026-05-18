@@ -7,13 +7,13 @@ function GroupTwoIntro() {
       <h2>PRATICHE QUOTIDIANE</h2>
       <ul className="daily-practices-list">
         <li>
-          <strong>PRATICA FORMALE</strong>: Ogni giorno, praticare la meditazione seduta sul respiro, seguendo la traccia audio. Talvolta (massimo due volte) è possibile sostituirla con la meditazione distesa del body-scan, seguendo la traccia audio.
+          <strong>PRATICA FORMALE</strong>: Ogni giorno, praticare la meditazione seduta seguendo la traccia audio.
         </li>
         <li>
-          <strong>PRATICA INFORMALE</strong>: Durante la giornata, concedersi qualche momento di consapevolezza – 2 o 3 minuti, anche più volte – per lasciare andare ogni pensiero e attività, e prendere consapevolezza di corpo, respiro, stato d’animo e ambiente circostante. È importante concentrarsi sull’atteggiamento di ascolto, cura e disponibilità verso la propria condizione (interna ed esterna). Si suggerisce anche di usare il respiro come asse attorno al quale «radunare la consapevolezza», dando così continuità alla pratica formale.
+          <strong>PRATICA INFORMALE</strong>: Durante la giornata, concedersi qualche momento di consapevolezza – 2 o 3 minuti, anche più volte – per lasciare andare ogni attività, e prendere consapevolezza delle varie dimensioni (tattile, olfattiva, etc.) che costituiscono la propria esperienza in quel frangente.
         </li>
         <li>
-          <strong>TASK CONTEMPLATIVO</strong>: Prova a interrogarti sulla natura dei fenomeni dischiusi dalla percezione, come suoni e colori: dove hanno luogo veramente? Prova a porti seriamente questa domanda, esplorandone le possibili risposte e le relative implicazioni. Non limitarti a una riflessione intellettuale: scopri se questo genere di indagine ha un impatto sul modo in cui concepisci la realtà che ti circonda.
+          <strong>TASK CONTEMPLATIVO</strong>: Prova a interrogarti sulla dimensione mentale/interiore: quali forme può assumere (es. pensiero discorsivo, immagini mentali, etc.)? Può essere utile prendere qualche appunto per annotare quelle che noti grazie alle sessioni di meditazione e quelle che scorgi nel corso della giornata.
         </li>
       </ul>
     </div>
@@ -26,6 +26,8 @@ function GroupTwoDashboard({ onLogout }) {
       onLogout={onLogout}
       pageTitle="Dashboard del Corso di Meditazione Non Duale"
       introContent={<GroupTwoIntro />}
+      showBodyScanMeditation={false}
+      showAdditionalLecture={false}
       questionnaireSurveyUrl={import.meta.env.VITE_QUALTRICS_SURVEY_URL_2}
     />
   )

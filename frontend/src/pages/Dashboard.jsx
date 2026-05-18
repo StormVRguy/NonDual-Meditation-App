@@ -64,6 +64,7 @@ function Dashboard({
   introContent = null,
   additionalContent = null,
   showBodyScanMeditation = true,
+  showAdditionalLecture = true,
   questionnaireSurveyUrl = null,
 }) {
   const user = getUser()
@@ -305,7 +306,7 @@ function Dashboard({
               )}
             </div>
 
-            {additionalLecture?.file_url ? (
+            {showAdditionalLecture && additionalLecture?.file_url ? (
               <div className="lecture-section">
                 <h2>Discussione finale e spiegazione del task contemplativo</h2>
                 <VideoPlayer
