@@ -1,8 +1,10 @@
 // Edge Function: user-me
-// Returns the current user's minimal profile (server-truth), including is_admin and group.
+// Returns the current user's minimal profile (server-truth), including is_admin, group,
+// and dashboard_variant (opaque key used by the frontend for routing, contains no group codes).
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { resolveDashboardVariant } from '../_shared/resolve-dashboard-variant.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -95,6 +97,7 @@ serve(async (req) => {
           personal_code: user.personal_code,
           is_admin: user.is_admin === true,
           group: user.group ?? '',
+          dashboard_variant: resolveDashboardVariant(user.group),
         },
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }

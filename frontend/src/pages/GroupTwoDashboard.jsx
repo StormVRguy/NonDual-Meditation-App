@@ -1,4 +1,5 @@
 import Dashboard from './Dashboard'
+import { qualtricsSurveyUrls } from '../config/qualtricsSurveyUrls'
 
 function GroupTwoIntro() {
   return (
@@ -28,7 +29,8 @@ function GroupTwoDashboard({ onLogout }) {
       introContent={<GroupTwoIntro />}
       showBodyScanMeditation={false}
       showAdditionalLecture={false}
-      questionnaireSurveyUrl={import.meta.env.VITE_QUALTRICS_SURVEY_URL_2}
+      useDefaultQualtricsUrl={false}
+      questionnaireSurveyUrl={qualtricsSurveyUrls.secondary}
     />
   )
 }

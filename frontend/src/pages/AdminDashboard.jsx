@@ -71,7 +71,7 @@ function AdminDashboard({ onLogout }) {
   const [newTitle, setNewTitle] = useState('')
   const [newStartsAt, setNewStartsAt] = useState('')
   const [newEndsAt, setNewEndsAt] = useState('')
-  const [newGroup, setNewGroup] = useState('Exp1')
+  const [newGroup, setNewGroup] = useState('')
 
   const fetchSummary = async () => {
     try {
@@ -318,7 +318,7 @@ function AdminDashboard({ onLogout }) {
                     <input
                       value={newGroup}
                       onChange={(e) => setNewGroup(e.target.value)}
-                      placeholder="Es. Exp1"
+                      placeholder="Es. Exp1, Exp2, C1, C2..."
                       type="text"
                     />
                   </label>

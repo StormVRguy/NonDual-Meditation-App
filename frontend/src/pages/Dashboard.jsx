@@ -22,8 +22,13 @@ function formatRomeDateTime(iso) {
 }
 
 /** Full survey URL including Q_PopulateResponse when configured (same as opening from the dashboard). */
-function buildQuestionnaireUrl(questionnaireSurveyUrl, user) {
-  let qualtricsUrl = questionnaireSurveyUrl || import.meta.env.VITE_QUALTRICS_SURVEY_URL
+function buildQuestionnaireUrl(questionnaireSurveyUrl, user, useDefaultQualtricsUrl = true) {
+  let qualtricsUrl =
+    typeof questionnaireSurveyUrl === 'string' ? questionnaireSurveyUrl.trim() : questionnaireSurveyUrl
+  if (!qualtricsUrl) {
+    if (!useDefaultQualtricsUrl) return null
+    qualtricsUrl = import.meta.env.VITE_QUALTRICS_SURVEY_URL
+  }
   if (!qualtricsUrl) return null
   const personalCode = user?.personal_code
   const codiceQid = import.meta.env.VITE_QUALTRICS_CODICE_QID
@@ -66,6 +71,7 @@ function Dashboard({
   showBodyScanMeditation = true,
   showAdditionalLecture = true,
   questionnaireSurveyUrl = null,
+  useDefaultQualtricsUrl = true,
 }) {
   const user = getUser()
   const [meditation, setMeditation] = useState(null)
@@ -90,7 +96,7 @@ function Dashboard({
   // Button should stay clickable for the whole active window (as long as meditation is enough),
   // even if the user already opened it in this window.
   const questionnaireClickable = isWithinWindow && isMeditationEnough
-  const questionnaireHref = buildQuestionnaireUrl(questionnaireSurveyUrl, user)
+  const questionnaireHref = buildQuestionnaireUrl(questionnaireSurveyUrl, user, useDefaultQualtricsUrl)
 
   useEffect(() => {
     fetchTodayMeditation()
@@ -174,7 +180,7 @@ function Dashboard({
 
   const handleQuestionnaireClick = async () => {
     if (!questionnaireClickable) return
-    const qualtricsUrl = buildQuestionnaireUrl(questionnaireSurveyUrl, user)
+    const qualtricsUrl = buildQuestionnaireUrl(questionnaireSurveyUrl, user, useDefaultQualtricsUrl)
     if (!qualtricsUrl) {
       alert('URL del questionario non configurata')
       return
