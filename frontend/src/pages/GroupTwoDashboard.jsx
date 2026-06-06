@@ -8,13 +8,28 @@ function GroupTwoIntro() {
       <h2>PRATICHE QUOTIDIANE</h2>
       <ul className="daily-practices-list">
         <li>
-          <strong>PRATICA FORMALE</strong>: Ogni giorno, praticare la meditazione sulla sfera mentale con la traccia audio.
+          <strong>PRATICA FORMALE</strong>
+          <p>Meditare quotidianamente in posizione seduta seguendo l&apos;ultima traccia audio.</p>
         </li>
         <li>
-          <strong>PRATICA INFORMALE</strong>: Durante la giornata, notare se qualche volta capita di essere fortemente immedesimate/i in uno stato mentale (emozione, giudizio, convinzione, bisogno etc.) ma poi, dopo qualche minuto, senza particolari ragioni esterne, quello stato appare lontano o poco rilevante. Notare che cosa cambia quando ci si disidentifica da quello stato.
+          <strong>TASK CONTEMPLATIVO</strong>
+          <p>
+            Qualche volta provare ad addormentarsi osservando la mente, proprio come facciamo in meditazione, ma senza contrastare il processo di addormentamento. Meglio se questa esplorazione è svolta in una delle seguenti circostanze: dopo un risveglio notturno; al mattino; oppure di pomeriggio. Ciò ha due scopi:
+          </p>
+          <ul>
+            <li>
+              È di per sé interessante osservare la mente durante lo stato in cui i sensi sono quasi sopiti e le forme consuete di attività mentale cedono il passo a processi interiori più vividi e bizzarri – benché non facili da contemplare senza perdere coscienza.
+            </li>
+            <li>
+              Questa attività potrebbe condurre, senza ulteriori pratiche, a sperimentare sogni lucidi (o comunque sogni più vividi e consapevoli del consueto), associati a questo tipo di meditazioni in varie fonti contemplative.
+            </li>
+          </ul>
         </li>
         <li>
-          <strong>TASK CONTEMPLATIVO</strong>: Esplora lo spazio della mente entro il quale sorgono e si dissolvono i vari contenuti mentali: ha delle qualità che lo caratterizzano? Se sì, prova a descriverle.
+          <strong>PRATICA INFORMALE</strong>
+          <p>
+            Provare ad accorgersi se, nella vita di tutti i giorni, si riesce a essere più consapevoli dei propri processi interiori, quasi come se questi venissero percepiti attraverso un senso interno. Riusciamo a sperimentare una relativa continuità di consapevolezza? Abbiamo l&apos;impressione che in tal modo si riduca il senso di identificazione con i contenuti e processi mentali più intensi e/o se ne limiti la durata?
+          </p>
         </li>
       </ul>
     </div>
