@@ -1,4 +1,5 @@
 import Dashboard from './Dashboard'
+import { dashboardFeatures } from '../config/dashboardFeatures'
 import { qualtricsSurveyUrls } from '../config/qualtricsSurveyUrls'
 
 function GroupTwoIntro() {
@@ -42,8 +43,7 @@ function GroupTwoDashboard({ onLogout }) {
       onLogout={onLogout}
       pageTitle="Dashboard del Corso di Meditazione Non Duale"
       introContent={<GroupTwoIntro />}
-      showBodyScanMeditation={false}
-      showAdditionalLecture={false}
+      {...dashboardFeatures.withExtraLecture}
       useDefaultQualtricsUrl={false}
       questionnaireSurveyUrl={qualtricsSurveyUrls.secondary}
     />

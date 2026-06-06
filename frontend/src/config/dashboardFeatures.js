@@ -17,5 +17,5 @@ export const dashboardFeatures = {
 
   // Uncomment / extend as needed for future variants:
   // withBodyScan: { showBodyScanMeditation: true, showAdditionalLecture: false },
-  // withExtraLecture: { showBodyScanMeditation: false, showAdditionalLecture: true },
+  withExtraLecture: { showBodyScanMeditation: false, showAdditionalLecture: true },
 }
