@@ -12,7 +12,7 @@ function CohortOneIntro() {
           <strong>PRATICA FORMALE</strong>: Praticare il body-scan ogni giorno, seguendo la traccia audio.
         </li>
         <li>
-          <strong>PRATICA INFORMALE</strong>: Scegliere un&apos;attività quotidiana da svolgere in modo consapevole - per es. lavarsi i denti, bere il caffè, scendere o salire le scale, etc.
+          <strong>PRATICA INFORMALE</strong>: Durante la giornata, quando hai qualche momento di tranquillità (bastano un paio di minuti), porta l&apos;attenzione al corpo e alle sue sensazioni, se possibile eseguendo una veloce scansione corporea. Poi, quando riprendi le tue attività, prova mantenere almeno un po&apos; questo tipo di consapevolezza.
         </li>
       </ul>
     </div>
