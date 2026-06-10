@@ -9,8 +9,7 @@ function GroupTwoIntro() {
       <h2>PRATICHE QUOTIDIANE</h2>
       <ul className="daily-practices-list">
         <li>
-          <strong>PRATICA FORMALE</strong>
-          <p>Meditare quotidianamente in posizione seduta seguendo l&apos;ultima traccia audio.</p>
+          <strong>PRATICA FORMALE</strong>: Praticare ogni giorno seguendo la traccia audio.
         </li>
         <li>
           <strong>TASK CONTEMPLATIVO</strong>
@@ -27,10 +26,7 @@ function GroupTwoIntro() {
           </ul>
         </li>
         <li>
-          <strong>PRATICA INFORMALE</strong>
-          <p>
-            Provare ad accorgersi se, nella vita di tutti i giorni, si riesce a essere più consapevoli dei propri processi interiori, quasi come se questi venissero percepiti attraverso un senso interno. Riusciamo a sperimentare una relativa continuità di consapevolezza? Abbiamo l&apos;impressione che in tal modo si riduca il senso di identificazione con i contenuti e processi mentali più intensi e/o se ne limiti la durata?
-          </p>
+          <strong>PRATICA INFORMALE</strong>: Possiamo provare a mantenere una relativa continuità di presenza durante le attività quotidiane, rafforzando la particolare forma di consapevolezza che stiamo scoprendo e coltivando nella pratica formale - la quale potrebbe essere descritta come lo &quot;spazio&quot; entro il quale sorgono e svaniscono i vari fenomeni dell&apos;esperienza, e che in ultima analisi non è neppure distinguibile da questi ultimi.
         </li>
       </ul>
     </div>
@@ -43,7 +39,7 @@ function GroupTwoDashboard({ onLogout }) {
       onLogout={onLogout}
       pageTitle="Dashboard del Corso di Meditazione Non Duale"
       introContent={<GroupTwoIntro />}
-      {...dashboardFeatures.withExtraLecture}
+      {...dashboardFeatures.coreOnly}
       useDefaultQualtricsUrl={false}
       questionnaireSurveyUrl={qualtricsSurveyUrls.secondary}
     />
